@@ -1,8 +1,0 @@
-{
-  "buildCommand": "npm --prefix enterprise-ai-helpdesk/frontend run build",
-  "outputDirectory": "enterprise-ai-helpdesk/frontend/dist",
-  "cleanUrls": true,
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}
