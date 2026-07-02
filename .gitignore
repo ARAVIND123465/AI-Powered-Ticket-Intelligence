@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+/enterprise-ai-helpdesk/frontend/node_modules/
+
+# Production build artifacts
+dist/
+/enterprise-ai-helpdesk/frontend/dist/
+
+# Env config files
+.env
+.env.local
+.env.production
+.env.development
+.env.staging
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python caches & virtualenvs
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
