@@ -1,0 +1,9 @@
+{
+  "name": "enterprise-ai-helpdesk-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd enterprise-ai-helpdesk/frontend && npm run build && cp -r dist ../../dist",
+    "postinstall": "cd enterprise-ai-helpdesk/frontend && npm install"
+  }
+}
