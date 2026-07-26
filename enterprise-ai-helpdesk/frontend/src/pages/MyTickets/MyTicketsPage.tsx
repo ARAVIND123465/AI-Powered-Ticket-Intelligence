@@ -9,17 +9,32 @@ import { cn } from '@/utils/cn';
 import type { Ticket } from '@/types';
 import { ticketStore } from '@/utils/ticketStore';
 
+import { useAuth } from '@/context/AuthContext';
+
 const TABS = ['All', 'Open', 'In_Progress', 'Resolved', 'Closed'] as const;
 
 export default function MyTicketsPage() {
   const navigate = useNavigate();
+  const { user, role } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [tickets, setTickets] = useState<Ticket[]>([]);
 
   useEffect(() => {
-    setTickets(ticketStore.getTickets());
-  }, []);
+    const all = ticketStore.getTickets();
+    const currentUserEmail = user?.email || localStorage.getItem('mock_registered_email') || '';
+
+    // If Customer role, strictly filter tickets by customer's email
+    if (role === 'Customer' && currentUserEmail) {
+      const customerOnly = all.filter((t) =>
+        t.user_id.toLowerCase() === currentUserEmail.toLowerCase() ||
+        t.user_id.toLowerCase().includes(currentUserEmail.toLowerCase())
+      );
+      setTickets(customerOnly);
+    } else {
+      setTickets(all);
+    }
+  }, [user, role]);
 
   const filtered = tickets.filter((t) => {
     if (activeTab !== 'All' && t.status !== activeTab) return false;
@@ -73,10 +88,32 @@ export default function MyTicketsPage() {
                     {ticket.is_duplicate && <Badge variant="warning" size="sm">Duplicate</Badge>}
                   </div>
                   <h4 className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-primary-400 transition-colors">{ticket.title}</h4>
-                  <div className="flex items-center gap-2 mt-1.5">
+                  
+                  {/* Ticket Description */}
+                  <p className="text-xs text-[var(--text-tertiary)] line-clamp-1 mt-1">{ticket.description}</p>
+
+                  {/* Badges & Attachment Info */}
+                  <div className="flex items-center gap-2 mt-2 flex-wrap text-xs">
                     <Badge variant="default" size="sm">{ticket.category}</Badge>
                     {ticket.sentiment && <Badge variant="sentiment" size="sm">{ticket.sentiment}</Badge>}
+                    
+                    {ticket.attachment && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-md bg-[var(--bg-tertiary)] border border-[var(--border-primary)] text-[var(--text-secondary)]">
+                        📎 {ticket.attachment}
+                      </span>
+                    )}
+
+                    {ticket.agent_responses && ticket.agent_responses.length > 0 && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-green-500/10 text-green-400 border border-green-500/20">
+                        💬 Agent Responded ({ticket.agent_responses.length})
+                      </span>
+                    )}
                   </div>
+                </div>
+
+                <div className="text-right text-[11px] text-[var(--text-tertiary)] shrink-0">
+                  <div>{new Date(ticket.created_at).toLocaleDateString()}</div>
+                  <div className="font-semibold text-primary-400 mt-1">Track Progress →</div>
                 </div>
               </div>
             </motion.div>

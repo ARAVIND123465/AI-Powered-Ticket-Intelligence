@@ -1,18 +1,73 @@
-import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  LayoutDashboard, Ticket, Plus, BarChart3, Bot, Search,
+  LayoutDashboard, Ticket, Plus, BarChart3, Bot, Search, Bell, User,
   FileText, Users, Settings, ChevronLeft, ChevronRight, Sparkles, LogOut,
+  ShieldCheck, Building, ClipboardList, MessageSquare, TrendingUp, Clock,
+  CheckCircle,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { SIDEBAR_NAV } from '@/constants';
+import { CUSTOMER_NAV, AGENT_NAV, ADMIN_NAV, SUPERADMIN_NAV } from '@/constants';
 import { cn } from '@/utils/cn';
 import Avatar from '@/components/ui/Avatar';
 
 const iconMap: Record<string, React.ElementType> = {
-  LayoutDashboard, Ticket, Plus, BarChart3, Bot, Search, FileText, Users, Settings,
+  LayoutDashboard, Ticket, Plus, BarChart3, Bot, Search, Bell, User,
+  FileText, Users, Settings, ShieldCheck, Building, ClipboardList,
+  MessageSquare, TrendingUp, Clock, CheckCircle,
 };
+
+// Role → portal identity config
+const PORTAL_IDENTITY = {
+  Customer: {
+    label: 'Customer Portal',
+    badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
+    accent: 'bg-emerald-600/15 text-emerald-400',
+    dot: 'bg-emerald-400',
+    gradient: 'from-emerald-600 to-teal-600',
+    sections: [
+      { title: 'My Workspace', items: CUSTOMER_NAV.main },
+      { title: 'Support & AI', items: CUSTOMER_NAV.support },
+      { title: 'Account', items: CUSTOMER_NAV.account },
+    ],
+  },
+  Agent: {
+    label: 'Agent Panel',
+    badge: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/25',
+    accent: 'bg-indigo-600/15 text-indigo-400',
+    dot: 'bg-indigo-400',
+    gradient: 'from-indigo-600 to-violet-600',
+    sections: [
+      { title: 'Workspace', items: AGENT_NAV.workspace },
+      { title: 'Tools & AI', items: AGENT_NAV.tools },
+      { title: 'Account', items: AGENT_NAV.account },
+    ],
+  },
+  Admin: {
+    label: 'Company Admin',
+    badge: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
+    accent: 'bg-amber-600/15 text-amber-400',
+    dot: 'bg-amber-400',
+    gradient: 'from-amber-500 to-orange-600',
+    sections: [
+      { title: 'Operations', items: ADMIN_NAV.operations },
+      { title: 'Team & Reports', items: ADMIN_NAV.team },
+      { title: 'System', items: ADMIN_NAV.system },
+    ],
+  },
+  SuperAdmin: {
+    label: 'Super Admin',
+    badge: 'bg-red-500/15 text-red-400 border-red-500/25',
+    accent: 'bg-red-600/15 text-red-400',
+    dot: 'bg-red-400',
+    gradient: 'from-red-600 to-rose-600',
+    sections: [
+      { title: 'Platform', items: SUPERADMIN_NAV.platform },
+      { title: 'Management', items: SUPERADMIN_NAV.management },
+      { title: 'System', items: SUPERADMIN_NAV.system },
+    ],
+  },
+} as const;
 
 interface SidebarProps {
   collapsed: boolean;
@@ -23,85 +78,103 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { user, role, logout } = useAuth();
   const location = useLocation();
 
-  const renderSection = (title: string, items: readonly { label: string; path: string; icon: string; roles: readonly string[] }[]) => {
-    const visibleItems = items.filter((item) => role && item.roles.includes(role));
-    if (visibleItems.length === 0) return null;
+  const portalKey = (role as keyof typeof PORTAL_IDENTITY) || 'Customer';
+  const portal = PORTAL_IDENTITY[portalKey] || PORTAL_IDENTITY.Customer;
 
-    return (
-      <div className="mb-4">
-        {!collapsed && (
-          <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-            {title}
-          </p>
-        )}
-        <div className="space-y-0.5">
-          {visibleItems.map((item) => {
-            const Icon = iconMap[item.icon] || LayoutDashboard;
-            const isActive = location.pathname === item.path || (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
+  const isActive = (path: string) =>
+    location.pathname === path ||
+    (path !== '/customer' && path !== '/agent' && path !== '/dashboard' && path !== '/super-admin' &&
+     path !== '/customer/dashboard' && path !== '/agent/dashboard' && path !== '/company-admin/dashboard' && path !== '/platform/dashboard' &&
+     location.pathname.startsWith(path));
 
-            return (
-              <Link key={item.path} to={item.path}>
-                <div
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200',
-                    isActive
-                      ? 'bg-primary-600/15 text-primary-400 shadow-sm'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]',
-                    collapsed && 'justify-center px-2'
-                  )}
-                >
-                  <Icon className={cn('w-[18px] h-[18px] flex-shrink-0', isActive && 'text-primary-400')} />
-                  {!collapsed && <span className="truncate">{item.label}</span>}
-                  {isActive && !collapsed && (
-                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary-400" />
-                  )}
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+  const renderSection = (title: string, items: readonly { label: string; path: string; icon: string }[]) => (
+    <div className="mb-4" key={title}>
+      {!collapsed && (
+        <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">
+          {title}
+        </p>
+      )}
+      <div className="space-y-0.5">
+        {items.map((item) => {
+          const Icon = iconMap[item.icon] || LayoutDashboard;
+          const active = isActive(item.path);
+          return (
+            <Link key={`${item.path}-${item.label}`} to={item.path}>
+              <div
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 group relative',
+                  active
+                    ? `${portal.accent} shadow-sm`
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]',
+                  collapsed && 'justify-center px-2'
+                )}
+              >
+                <Icon className={cn('w-[18px] h-[18px] flex-shrink-0', active && 'text-current')} />
+                {!collapsed && <span className="truncate flex-1">{item.label}</span>}
+                {active && !collapsed && (
+                  <div className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', portal.dot)} />
+                )}
+                {/* Tooltip for collapsed mode */}
+                {collapsed && (
+                  <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-[var(--bg-elevated)] border border-[var(--border-primary)] rounded-lg text-xs font-medium text-[var(--text-primary)] whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 shadow-lg">
+                    {item.label}
+                  </div>
+                )}
+              </div>
+            </Link>
+          );
+        })}
       </div>
-    );
-  };
+    </div>
+  );
 
   return (
     <motion.aside
       animate={{ width: collapsed ? 64 : 240 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
-      className="h-screen sticky top-0 flex flex-col border-r border-[var(--border-primary)] bg-[var(--bg-secondary)] z-30"
+      className="h-screen sticky top-0 flex flex-col border-r border-[var(--border-primary)] bg-[var(--bg-secondary)] z-30 overflow-hidden"
     >
-      {/* Logo */}
-      <div className={cn('flex items-center h-16 px-4 border-b border-[var(--border-primary)]', collapsed && 'justify-center px-2')}>
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center flex-shrink-0">
+      {/* Logo + Portal Badge */}
+      <div className={cn('flex items-center h-16 px-4 border-b border-[var(--border-primary)] flex-shrink-0', collapsed && 'justify-center px-2')}>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className={cn('w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center flex-shrink-0', portal.gradient)}>
             <Sparkles className="w-4 h-4 text-white" />
           </div>
           {!collapsed && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <h1 className="text-sm font-bold gradient-text leading-tight">AI Helpdesk</h1>
-              <p className="text-[9px] text-[var(--text-tertiary)] font-medium">Enterprise Platform</p>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-w-0">
+              <h1 className="text-sm font-bold gradient-text leading-tight truncate">AI Helpdesk</h1>
+              <span className={cn(
+                'inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider border mt-0.5',
+                portal.badge
+              )}>
+                {portal.label}
+              </span>
             </motion.div>
           )}
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 px-2">
-        {renderSection('Main', SIDEBAR_NAV.main)}
-        {renderSection('AI Features', SIDEBAR_NAV.ai)}
-        {renderSection('Management', SIDEBAR_NAV.management)}
+      {/* Navigation Sections */}
+      <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1 scrollbar-thin">
+        {portal.sections.map((section) =>
+          renderSection(section.title, section.items as readonly { label: string; path: string; icon: string }[])
+        )}
       </nav>
 
-      {/* User & Collapse */}
-      <div className="border-t border-[var(--border-primary)] p-2">
+      {/* User Info + Collapse Toggle */}
+      <div className="border-t border-[var(--border-primary)] p-2 flex-shrink-0">
         {!collapsed && user && (
-          <div className="flex items-center gap-2.5 px-2 py-2 mb-1">
-            <Avatar name={user.full_name} size="sm" />
+          <div className="flex items-center gap-2.5 px-2 py-2 mb-1 rounded-xl hover:bg-[var(--bg-tertiary)] transition-colors group">
+            <Avatar name={user.full_name || user.email} size="sm" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-[var(--text-primary)] truncate">{user.full_name || user.email}</p>
-              <p className="text-[10px] text-[var(--text-tertiary)]">{user.role}</p>
+              <p className="text-xs font-semibold text-[var(--text-primary)] truncate">{user.full_name || user.email}</p>
+              <p className={cn('text-[10px] font-medium truncate', portal.badge.split(' ')[1])}>{user.role}</p>
             </div>
-            <button onClick={logout} className="p-1 rounded-lg text-[var(--text-tertiary)] hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Logout">
+            <button
+              onClick={logout}
+              className="p-1.5 rounded-lg text-[var(--text-tertiary)] hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+              title="Sign Out"
+            >
               <LogOut className="w-3.5 h-3.5" />
             </button>
           </div>

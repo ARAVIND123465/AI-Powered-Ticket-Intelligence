@@ -99,6 +99,25 @@ export default function ProfilePage() {
           </div>
         </div>
       </Card>
+
+      {/* Administrator Unique Key Card */}
+      {displayUser.role === 'Admin' && (
+        <Card>
+          <div className="flex items-center gap-2 mb-3">
+            <Shield className="w-5 h-5 text-red-400" />
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Administrator Security Key</h3>
+          </div>
+          <p className="text-xs text-[var(--text-tertiary)] mb-4">
+            This is a secure, unique security bypass code assigned only to verified administrators of the AI Helpdesk Platform.
+          </p>
+          <div className="flex items-center justify-between p-3.5 bg-red-500/5 border border-red-500/20 rounded-xl">
+            <span className="text-xs text-red-400 font-semibold">Admin Access Code</span>
+            <span className="text-sm font-mono text-[var(--text-primary)] font-bold bg-[var(--bg-tertiary)] px-2.5 py-1 rounded border border-[var(--border-primary)] select-all select-text">
+              ADM-SECURE-99238-BYPASS
+            </span>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

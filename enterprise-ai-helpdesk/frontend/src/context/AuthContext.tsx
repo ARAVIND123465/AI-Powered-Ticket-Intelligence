@@ -16,6 +16,18 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// --- Role Normalization Suite ---
+// Seamlessly maps UPPER_CASE API values with CamelCase UI roles
+export const normalizeRole = (role: string | null): 'SuperAdmin' | 'Admin' | 'Agent' | 'Customer' => {
+  if (!role) return 'Customer';
+  const r = role.toUpperCase();
+  if (r === 'SUPER_ADMIN' || r === 'SUPERADMIN') return 'SuperAdmin';
+  if (r === 'COMPANY_ADMIN' || r === 'ADMIN' || r === 'COMPANYADMIN') return 'Admin';
+  if (r === 'SUPPORT_AGENT' || r === 'AGENT' || r === 'SUPPORTAGENT') return 'Agent';
+  if (r === 'CUSTOMER') return 'Customer';
+  return 'Customer';
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('access_token'));
@@ -31,14 +43,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (token) {
       if (token === 'mock-token') {
-        const storedRole = localStorage.getItem('user_role') || 'Admin';
+        const storedRole = normalizeRole(localStorage.getItem('user_role'));
         const storedName = localStorage.getItem('mock_user_name') || 'Administrator';
         const storedEmail = localStorage.getItem('mock_registered_email') || 'admin@company.com';
         setUser({
           id: 'mock-id',
           email: storedEmail,
           full_name: storedName,
-          role: storedRole as User['role'],
+          role: storedRole,
           created_at: new Date().toISOString()
         });
         setRole(storedRole);
@@ -47,20 +59,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       userService.getMe()
         .then((u) => {
-          setUser(u);
-          setRole(u.role);
+          const norm = normalizeRole(u.role);
+          setUser({ ...u, role: norm });
+          setRole(norm);
         })
         .catch((err) => {
-          // If server is offline/network error/gateway error, default to mock mode to keep session alive
           if (isBackendOffline(err)) {
-            const storedRole = localStorage.getItem('user_role') || 'Admin';
+            const storedRole = normalizeRole(localStorage.getItem('user_role'));
             const storedName = localStorage.getItem('mock_user_name') || 'Administrator';
             const storedEmail = localStorage.getItem('mock_registered_email') || 'admin@company.com';
             setUser({
               id: 'mock-id',
               email: storedEmail,
               full_name: storedName,
-              role: storedRole as User['role'],
+              role: storedRole,
               created_at: new Date().toISOString()
             });
             setRole(storedRole);
@@ -83,37 +95,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const data: Token = await authService.login({ username: email, password });
+      const normRole = normalizeRole(data.role);
       localStorage.setItem('access_token', data.access_token);
-      localStorage.setItem('user_role', data.role);
+      localStorage.setItem('user_role', normRole);
       setToken(data.access_token);
-      setRole(data.role);
+      setRole(normRole);
     } catch (err: any) {
-      // If server is offline/unreachable/gateway error, fallback to local mock login mode
       if (isBackendOffline(err) || err.code === 'ERR_NETWORK') {
-        console.warn('Backend server is offline or proxy gateway failed. Enabling client-side Mock Mode.');
-        const mockRole = email.toLowerCase().includes('agent')
-          ? 'Agent'
-          : email.toLowerCase().includes('customer')
-            ? 'Customer'
-            : 'Admin';
+        console.warn('Backend server offline. Enabling Mock Session.');
         
-        // Retrieve stored name if matches email, otherwise compute
-        const storedEmail = localStorage.getItem('mock_registered_email');
-        const storedName = (storedEmail === email ? localStorage.getItem('mock_user_name') : null) || email.split('@')[0].toUpperCase();
+        const isSuperEmail = email.toLowerCase().includes('super');
+        const isAgentEmail = email.toLowerCase().includes('agent');
+        const isCustomerEmail = email.toLowerCase().includes('customer');
 
+        const mockRole = isSuperEmail
+          ? 'SuperAdmin'
+          : isAgentEmail
+            ? 'Agent'
+            : isCustomerEmail
+              ? 'Customer'
+              : 'Admin';
+
+        const resolvedName = isSuperEmail
+          ? 'Super Admin'
+          : email.toLowerCase().includes('admin')
+            ? 'Company Admin'
+            : email.split('@')[0];
 
         localStorage.setItem('access_token', 'mock-token');
         localStorage.setItem('user_role', mockRole);
-        localStorage.setItem('mock_user_name', storedName);
+        localStorage.setItem('mock_user_name', resolvedName);
         localStorage.setItem('mock_registered_email', email);
         localStorage.setItem('mock_user_password', password);
 
         setToken('mock-token');
         setRole(mockRole);
         setUser({
-          id: 'mock-id',
+          id: `user-${Date.now()}`,
           email: email,
-          full_name: storedName,
+          full_name: resolvedName,
           role: mockRole,
           created_at: new Date().toISOString(),
         });
@@ -131,25 +151,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     try {
-      await authService.register({ email, password, full_name: fullName, role: userRole as User['role'] });
+      const normRole = normalizeRole(userRole);
+      await authService.register({ email, password, full_name: fullName, role: normRole as any });
     } catch (err: any) {
       if (isBackendOffline(err) || err.code === 'ERR_NETWORK') {
         console.warn('Backend server offline. Simulating registration success.');
         localStorage.setItem('mock_registered_email', email);
         localStorage.setItem('mock_user_name', fullName);
         localStorage.setItem('mock_user_password', password);
-        localStorage.setItem('user_role', userRole);
+        localStorage.setItem('user_role', normalizeRole(userRole));
         return;
       }
       throw err;
     }
   };
 
-
-
   const logout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('user_role');
+    localStorage.removeItem('mock_registered_email');
+    localStorage.removeItem('mock_user_name');
+    localStorage.removeItem('mock_user_password');
     setToken(null);
     setUser(null);
     setRole(null);
@@ -178,4 +200,3 @@ export function useAuth() {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }
-

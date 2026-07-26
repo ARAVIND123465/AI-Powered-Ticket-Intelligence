@@ -30,3 +30,12 @@ env/
 .vscode/
 .idea/
 *.swp
+
+# Database & Vector DB files
+*.db
+*.sqlite3
+vector_db/
+
+# TypeScript build info
+*.tsbuildinfo
+

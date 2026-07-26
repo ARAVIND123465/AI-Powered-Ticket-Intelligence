@@ -26,11 +26,19 @@ export interface User {
   id: string;
   email: string;
   full_name: string | null;
-  role: 'Customer' | 'Agent' | 'Admin';
+  role: 'Customer' | 'Agent' | 'Admin' | 'SuperAdmin';
   created_at: string;
 }
 
 // --- Ticket ---
+export interface TicketAgentResponseItem {
+  id: string;
+  agent_name: string;
+  response_text: string;
+  created_at: string;
+  status_changed_to?: string;
+}
+
 export interface Ticket {
   id: string;
   title: string;
@@ -45,13 +53,19 @@ export interface Ticket {
   ai_root_cause: string | null;
   ai_suggested_resolution: string | null;
   attachment: string | null;
+  pdf_extracted_text?: string | null;
+  pdf_summary?: string | null;
   created_at: string;
   updated_at: string;
+  ai_insights?: AIInsights;
+  agent_responses?: TicketAgentResponseItem[];
 }
 
 export interface TicketCreate {
-  title: string;
+  subject: string;
   description: string;
+  category_override?: string | null;
+  priority_override?: string | null;
 }
 
 export interface TicketUpdate {
@@ -72,6 +86,26 @@ export interface AIInsights {
   duplicate_matches: DuplicateMatch[];
   fake_attachment_detected?: boolean;
   fake_file_name?: string | null;
+  document_validation?: DocumentValidationResult | null;
+}
+
+export interface DocumentValidationResult {
+  is_ticket: boolean;
+  is_valid: boolean;
+  document_type: string;
+  company_name: string;
+  verification_status: string;
+  fraud_score: number;
+  confidence: number;
+  reason: string;
+  ocr_text: string;
+  barcode_present: boolean;
+  qr_code_present: boolean;
+  logo_present: boolean;
+  signature_present: boolean;
+  document_title: string;
+  description: string;
+  sandbox_mode: boolean;
 }
 
 export interface DuplicateMatch {

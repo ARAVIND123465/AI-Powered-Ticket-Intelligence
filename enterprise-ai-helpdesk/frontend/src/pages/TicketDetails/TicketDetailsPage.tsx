@@ -92,6 +92,21 @@ export default function TicketDetailsPage() {
 
   const getPdfDetails = (fileName: string, category: string | null) => {
     const name = fileName.toLowerCase();
+    
+    // Dynamically retrieve stored real PDF text/summary from backend analysis
+    if (ticket.pdf_summary) {
+      const pageCount = ticket.pdf_extracted_text?.match(/\[Page \d+\]/g)?.length || 1;
+      const sizeEst = ticket.pdf_extracted_text 
+        ? `${(ticket.pdf_extracted_text.length / 1024).toFixed(1)} KB` 
+        : "1.4 MB";
+      return {
+        size: sizeEst,
+        pages: pageCount,
+        contentSummary: ticket.pdf_summary,
+        isFake: false
+      };
+    }
+
     const size = "1.4 MB";
     const pages = 1;
     let contentSummary = "Extracted metadata: General text document.";
@@ -245,6 +260,99 @@ export default function TicketDetailsPage() {
             <pre className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed font-sans">
               {ticket.ai_suggested_resolution || '1. Verify checkout sessions on billing console.\n2. Re-trigger Stripe confirmation hook.\n3. Mark order as confirmed manually.'}
             </pre>
+          </Card>
+
+          {/* Support Agent Response & Status Update Box */}
+          <Card className="space-y-4 border-primary-500/20">
+            <div className="flex items-center justify-between border-b border-[var(--border-primary)] pb-3">
+              <div className="flex items-center gap-2">
+                <Brain className="w-4 h-4 text-primary-400" />
+                <h3 className="text-sm font-bold text-[var(--text-primary)]">Support Agent Response & Communication Log</h3>
+              </div>
+              <Badge variant="status">Agent Console</Badge>
+            </div>
+
+            {/* Display agent responses */}
+            <div className="space-y-3">
+              {(ticket.agent_responses && ticket.agent_responses.length > 0) ? (
+                ticket.agent_responses.map((resp: any, idx: number) => (
+                  <div key={resp.id || idx} className="p-3.5 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] text-xs space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-primary-400 flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5" /> {resp.agent_name}
+                      </span>
+                      <span className="text-[10px] text-[var(--text-tertiary)]">
+                        {new Date(resp.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <p className="text-[var(--text-secondary)] leading-relaxed">{resp.response_text}</p>
+                    {resp.status_changed_to && (
+                      <span className="inline-block text-[10px] text-amber-400 font-semibold bg-amber-500/10 px-2 py-0.5 rounded-md">
+                        Status changed to: {resp.status_changed_to}
+                      </span>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-xs text-[var(--text-tertiary)] p-3 text-center bg-[var(--bg-tertiary)] rounded-xl">
+                  No responses added yet. Type below to send an official support update to the customer.
+                </div>
+              )}
+            </div>
+
+            {/* Agent Reply Input */}
+            <div className="pt-3 border-t border-[var(--border-primary)] space-y-3">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-[var(--text-secondary)]">Post Agent Response / Resolution Update</label>
+                <textarea
+                  rows={3}
+                  id="agentReplyInput"
+                  placeholder="Type official response to customer or internal resolution notes..."
+                  className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl p-3 text-xs text-[var(--text-primary)] focus:outline-none focus:border-primary-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-[var(--text-tertiary)]">Update Status:</span>
+                  <select
+                    id="agentStatusSelect"
+                    defaultValue={ticket.status}
+                    className="bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-lg px-2.5 py-1 text-xs text-[var(--text-primary)]"
+                  >
+                    <option value="Open">Open</option>
+                    <option value="In_Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Closed">Closed</option>
+                  </select>
+                </div>
+
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const inputEl = document.getElementById('agentReplyInput') as HTMLTextAreaElement;
+                    const statusEl = document.getElementById('agentStatusSelect') as HTMLSelectElement;
+                    const text = inputEl?.value;
+                    const newStatus = statusEl?.value;
+
+                    if (!text || !text.trim()) {
+                      toast.error('Please enter a response message.');
+                      return;
+                    }
+
+                    const updated = ticketStore.addAgentResponse(ticket.id, 'Support Agent', text.trim(), newStatus);
+                    if (updated) {
+                      setTicket({ ...updated });
+                      if (inputEl) inputEl.value = '';
+                      toast.success('Agent response posted & synchronized with customer ticket details!');
+                    }
+                  }}
+                  className="flex items-center gap-1.5 text-xs"
+                >
+                  Send Response to Customer
+                </Button>
+              </div>
+            </div>
           </Card>
 
           {/* Timeline */}

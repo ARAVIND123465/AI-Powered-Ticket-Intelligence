@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
-import { Mail, Lock, User } from 'lucide-react';
+import { Mail, Lock, User, ShieldCheck, Building } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function RegisterPage() {
   const { register: registerUser } = useAuth();
@@ -12,7 +12,6 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('Customer');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -21,7 +20,9 @@ export default function RegisterPage() {
     setError('');
     setIsLoading(true);
     try {
-      await registerUser(email, password, fullName, role);
+      // Public users register strictly as Customer role
+      await registerUser(email, password, fullName, 'Customer');
+      toast.success("Account created successfully! Please sign in.");
       navigate('/login');
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Registration failed. Please try again.');
@@ -33,8 +34,8 @@ export default function RegisterPage() {
   return (
     <div>
       <div className="text-center mb-6">
-        <h2 className="text-xl font-bold text-[var(--text-primary)]">Create Account</h2>
-        <p className="text-sm text-[var(--text-tertiary)] mt-1">Join the AI-powered helpdesk platform</p>
+        <h2 className="text-xl font-bold text-[var(--text-primary)]">Create Customer Account</h2>
+        <p className="text-sm text-[var(--text-tertiary)] mt-1">Submit & track your support tickets with AI intelligence</p>
       </div>
 
       {error && (
@@ -45,29 +46,33 @@ export default function RegisterPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input label="Full Name" placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} icon={<User className="w-4 h-4" />} required />
-        <Input label="Email" type="email" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} icon={<Mail className="w-4 h-4" />} required />
+        <Input label="Email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} icon={<Mail className="w-4 h-4" />} required />
         <Input label="Password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} icon={<Lock className="w-4 h-4" />} required />
-        <Select
-          label="Role"
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          options={[
-            { value: 'Customer', label: 'Customer' },
-            { value: 'Agent', label: 'Support Agent' },
-            { value: 'Admin', label: 'Administrator' },
-          ]}
-        />
+        
         <Button type="submit" isLoading={isLoading} className="w-full">
           Create Account
         </Button>
       </form>
 
-      <p className="text-center text-xs text-[var(--text-tertiary)] mt-5">
-        Already have an account?{' '}
-        <Link to="/login" className="text-primary-400 hover:text-primary-300 font-medium">
-          Sign in
+      {/* Enterprise Company Registration Banner */}
+      <div className="mt-5 p-3.5 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] space-y-1.5">
+        <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-primary)]">
+          <span className="flex items-center gap-1.5"><Building className="w-3.5 h-3.5 text-primary-400" /> Enterprise Company?</span>
+          <Link to="/register-company" className="text-primary-400 hover:underline text-[11px]">
+            Onboard Company →
+          </Link>
+        </div>
+        <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
+          Register your organization (e.g., RedBus, IRCTC, TechCorp) for Super Admin approval & multi-tenant helpdesk.
+        </p>
+      </div>
+
+      <div className="mt-4 pt-3 border-t border-[var(--border-primary)] flex items-center justify-between text-xs text-[var(--text-tertiary)]">
+        <span>Already have an account? <Link to="/login" className="text-primary-400 font-medium hover:underline">Sign in</Link></span>
+        <Link to="/admin-login" className="text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] flex items-center gap-1">
+          <ShieldCheck className="w-3.5 h-3.5" /> Admin Portal
         </Link>
-      </p>
+      </div>
     </div>
   );
 }
