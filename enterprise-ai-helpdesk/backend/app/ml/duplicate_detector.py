@@ -73,11 +73,12 @@ class DuplicateDetector:
     since "open tickets" changes constantly.
     """
 
-    def __init__(self, similarity_threshold: float = 0.6, max_matches: int = 5):
+    def __init__(self, similarity_threshold: float = 0.50, max_matches: int = 5):
         self.similarity_threshold = similarity_threshold
         self.max_matches = max_matches
         self.vectorizer: Optional[TfidfVectorizer] = None
         self.tfidf_matrix = None
+        self.embeddings_matrix = None
         self.tickets: list[dict] = []
 
     def fit(self, tickets: list[dict]):
@@ -91,6 +92,7 @@ class DuplicateDetector:
         if not tickets:
             self.vectorizer = None
             self.tfidf_matrix = None
+            self.embeddings_matrix = None
             logger.info("No open tickets provided — duplicate index is empty.")
             return
 
@@ -103,6 +105,16 @@ class DuplicateDetector:
             max_features=10000, ngram_range=(1, 2), min_df=1, stop_words="english"
         )
         self.tfidf_matrix = self.vectorizer.fit_transform(corpus)
+
+        # Compute semantic embeddings for hybrid matching
+        try:
+            from app.rag.embeddings import get_embedding_model
+            model = get_embedding_model()
+            self.embeddings_matrix = np.array(model.embed_texts(corpus))
+        except Exception as e:
+            logger.info("Semantic embedding skipped in duplicate detector: %s", e)
+            self.embeddings_matrix = None
+
         logger.info("Duplicate index built from %d open tickets.", len(tickets))
 
     def check(self, subject: str, description: str = "") -> dict:
@@ -120,6 +132,18 @@ class DuplicateDetector:
 
         query_vec = self.vectorizer.transform([query_text])
         similarities = cosine_similarity(query_vec, self.tfidf_matrix)[0]
+
+        # Blend with semantic embeddings
+        if self.embeddings_matrix is not None and len(self.embeddings_matrix) > 0:
+            try:
+                from app.rag.embeddings import get_embedding_model
+                model = get_embedding_model()
+                q_emb = np.array(model.embed_query(query_text))
+                sem_sims = np.dot(self.embeddings_matrix, q_emb)
+                # Take max of lexical TF-IDF and semantic similarity
+                similarities = np.maximum(similarities, sem_sims)
+            except Exception as e:
+                logger.info("Semantic similarity fallback in check: %s", e)
 
         top_indices = np.argsort(similarities)[::-1][: self.max_matches]
 

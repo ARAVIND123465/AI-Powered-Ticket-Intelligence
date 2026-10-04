@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import HomePage from '@/pages/Public/HomePage';
+import { useAuth, normalizeRole, roleHome } from '@/context/AuthContext';
 import { PageLoader } from '@/components/ui/Spinner';
 
 // Layouts
@@ -8,7 +9,6 @@ import AuthLayout from '@/layouts/AuthLayout';
 import PublicLayout from '@/layouts/PublicLayout';
 
 // Public Pages
-import HomePage from '@/pages/Public/HomePage';
 import PublicAssistantPage from '@/pages/Public/PublicAssistantPage';
 import PublicCreateTicketPage from '@/pages/Public/PublicCreateTicketPage';
 import TrackTicketPage from '@/pages/Public/TrackTicketPage';
@@ -38,38 +38,24 @@ import ProfilePage from '@/pages/Profile/ProfilePage';
 import SuperAdminPage from '@/pages/SuperAdmin/SuperAdminPage';
 import CompanyAdminPage from '@/pages/CompanyAdmin/CompanyAdminPage';
 
-/** Role-based home routes */
-export const roleHome = (role: string | null): string => {
-  if (!role) return '/';
-  const r = role.toUpperCase();
-  if (r === 'SUPER_ADMIN' || r === 'SUPERADMIN') return '/platform/dashboard';
-  if (r === 'COMPANY_ADMIN' || r === 'ADMIN' || r === 'COMPANYADMIN') return '/company-admin/dashboard';
-  if (r === 'SUPPORT_AGENT' || r === 'AGENT' || r === 'SUPPORTAGENT') return '/agent/dashboard';
-  if (r === 'CUSTOMER') return '/customer/dashboard';
-  return '/';
-};
+// Re-export roleHome for backwards compatibility
+export { roleHome };
 
 /** Guard: redirects unauthenticated users to login */
 function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
   const { isAuthenticated, isLoading, role } = useAuth();
 
   if (isLoading) return <PageLoader />;
-  if (!isAuthenticated) return <Navigate to="/admin-login" replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   if (roles && role) {
-    const normUserRole = role.toUpperCase();
-    const isAuthorized = roles.some(r => {
-      const nr = r.toUpperCase();
-      if (nr === 'SUPER_ADMIN' || nr === 'SUPERADMIN') return normUserRole === 'SUPERADMIN' || normUserRole === 'SUPER_ADMIN';
-      if (nr === 'COMPANY_ADMIN' || nr === 'ADMIN' || nr === 'COMPANYADMIN') return normUserRole === 'ADMIN' || normUserRole === 'COMPANY_ADMIN' || normUserRole === 'COMPANYADMIN';
-      if (nr === 'SUPPORT_AGENT' || nr === 'AGENT' || nr === 'SUPPORTAGENT') return normUserRole === 'AGENT' || normUserRole === 'SUPPORT_AGENT' || normUserRole === 'SUPPORTAGENT';
-      if (nr === 'CUSTOMER') return normUserRole === 'CUSTOMER';
-      return false;
-    });
+    const canonicalUserRole = normalizeRole(role);
+    const canonicalAllowed = roles.map((r) => normalizeRole(r));
+    const isAuthorized = canonicalAllowed.includes(canonicalUserRole);
 
     if (!isAuthorized) {
-      console.warn(`Access denied. Role ${role} is not authorized for this view. Redirecting to home.`);
-      return <Navigate to={roleHome(role)} replace />;
+      console.warn(`Access denied. Role '${role}' (canonical: '${canonicalUserRole}') is not authorized. Allowed: ${canonicalAllowed.join(', ')}. Redirecting to home.`);
+      return <Navigate to={roleHome(canonicalUserRole)} replace />;
     }
   }
 
@@ -86,12 +72,14 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-/** Root redirect — sends to role-specific home when hitting "/" while logged in */
+/** Root redirect — sends to role-specific home when hitting "/" while logged in.
+ *  When NOT authenticated, renders the public HomePage directly to avoid
+ *  an infinite redirect loop (Navigate to="/" would re-render this component). */
 function RootRedirect() {
   const { isAuthenticated, isLoading, role } = useAuth();
   if (isLoading) return <PageLoader />;
   if (isAuthenticated) return <Navigate to={roleHome(role)} replace />;
-  return <Navigate to="/" replace />;
+  return <HomePage />;
 }
 
 export default function AppRoutes() {
@@ -134,64 +122,115 @@ export default function AppRoutes() {
         {/* ─── 👨‍💻 SUPPORT AGENT PANEL ─────────────────────────────────── */}
         <Route
           path="/agent/dashboard"
-          element={<ProtectedRoute roles={['Agent', 'SUPPORT_AGENT']}><AgentDashboardPage /></ProtectedRoute>}
+          element={<ProtectedRoute roles={['Agent']}><AgentDashboardPage /></ProtectedRoute>}
         />
         <Route path="/agent" element={<Navigate to="/agent/dashboard" replace />} />
+        <Route path="/support" element={<Navigate to="/agent/dashboard" replace />} />
 
         {/* Agent filtered ticket views — all routed to the agent dashboard with filter context */}
         <Route
           path="/agent/assigned"
-          element={<ProtectedRoute roles={['Agent', 'SUPPORT_AGENT']}><AgentDashboardPage /></ProtectedRoute>}
+          element={<ProtectedRoute roles={['Agent']}><AgentDashboardPage /></ProtectedRoute>}
         />
         <Route
           path="/agent/open"
-          element={<ProtectedRoute roles={['Agent', 'SUPPORT_AGENT']}><AgentDashboardPage /></ProtectedRoute>}
+          element={<ProtectedRoute roles={['Agent']}><AgentDashboardPage /></ProtectedRoute>}
         />
         <Route
           path="/agent/in-progress"
-          element={<ProtectedRoute roles={['Agent', 'SUPPORT_AGENT']}><AgentDashboardPage /></ProtectedRoute>}
+          element={<ProtectedRoute roles={['Agent']}><AgentDashboardPage /></ProtectedRoute>}
         />
         <Route
           path="/agent/resolved"
-          element={<ProtectedRoute roles={['Agent', 'SUPPORT_AGENT']}><AgentDashboardPage /></ProtectedRoute>}
+          element={<ProtectedRoute roles={['Agent']}><AgentDashboardPage /></ProtectedRoute>}
         />
         <Route
           path="/agent/messages"
-          element={<ProtectedRoute roles={['Agent', 'SUPPORT_AGENT']}><AgentDashboardPage /></ProtectedRoute>}
+          element={<ProtectedRoute roles={['Agent']}><AgentDashboardPage /></ProtectedRoute>}
         />
         <Route
           path="/agent/performance"
-          element={<ProtectedRoute roles={['Agent', 'SUPPORT_AGENT']}><AgentDashboardPage /></ProtectedRoute>}
+          element={<ProtectedRoute roles={['Agent']}><AgentDashboardPage /></ProtectedRoute>}
         />
 
         {/* ─── 🏢 COMPANY ADMIN DASHBOARD ──────────────────────────────── */}
         <Route
           path="/company-admin/dashboard"
-          element={<ProtectedRoute roles={['Admin', 'COMPANY_ADMIN']}><CompanyAdminPage /></ProtectedRoute>}
+          element={<ProtectedRoute roles={['Admin']}><CompanyAdminPage /></ProtectedRoute>}
         />
         <Route path="/company-admin" element={<Navigate to="/company-admin/dashboard" replace />} />
-        <Route path="/dashboard" element={<Navigate to="/company-admin/dashboard" replace />} />
+        <Route path="/admin" element={<Navigate to="/company-admin/dashboard" replace />} />
 
         {/* ─── 🛡️ PLATFORM SUPER ADMIN ─────────────────────────────────── */}
         <Route
           path="/platform/dashboard"
-          element={<ProtectedRoute roles={['SuperAdmin', 'SUPER_ADMIN']}><SuperAdminPage /></ProtectedRoute>}
+          element={<ProtectedRoute roles={['SuperAdmin']}><SuperAdminPage /></ProtectedRoute>}
         />
         <Route path="/super-admin" element={<Navigate to="/platform/dashboard" replace />} />
+        <Route path="/superadmin" element={<Navigate to="/platform/dashboard" replace />} />
 
-        {/* ─── SHARED PAGES (accessible to all roles) ───────────────────── */}
-        <Route path="/tickets" element={<MyTicketsPage />} />
-        <Route path="/tickets/create" element={<CreateTicketPage />} />
-        <Route path="/tickets/:id" element={<TicketDetailsPage />} />
-        <Route path="/notifications" element={<NotificationsPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/track-ticket" element={<TrackTicketPage />} />
+        {/* ─── SHARED PAGES (accessible to all authenticated roles) ───── */}
+        {/* Tickets: Customer sees their own, Agent/Admin/SuperAdmin see all — gated by the page component */}
+        <Route
+          path="/tickets"
+          element={
+            <ProtectedRoute roles={['Customer', 'Agent', 'Admin', 'SuperAdmin', 'SUPPORT_AGENT', 'COMPANY_ADMIN', 'SUPER_ADMIN']}>
+              <MyTicketsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tickets/create"
+          element={
+            <ProtectedRoute roles={['Customer', 'Agent', 'Admin', 'SuperAdmin', 'SUPPORT_AGENT', 'COMPANY_ADMIN', 'SUPER_ADMIN']}>
+              <CreateTicketPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tickets/:id"
+          element={
+            <ProtectedRoute roles={['Customer', 'Agent', 'Admin', 'SuperAdmin', 'SUPPORT_AGENT', 'COMPANY_ADMIN', 'SUPER_ADMIN']}>
+              <TicketDetailsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute roles={['Customer', 'Agent', 'Admin', 'SuperAdmin', 'SUPPORT_AGENT', 'COMPANY_ADMIN', 'SUPER_ADMIN']}>
+              <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute roles={['Customer', 'Agent', 'Admin', 'SuperAdmin', 'SUPPORT_AGENT', 'COMPANY_ADMIN', 'SUPER_ADMIN']}>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/track-ticket"
+          element={
+            <ProtectedRoute roles={['Customer', 'Agent', 'Admin', 'SuperAdmin', 'SUPPORT_AGENT', 'COMPANY_ADMIN', 'SUPER_ADMIN']}>
+              <TrackTicketPage />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* ─── AI & ANALYTICS (Agent + Admin + SuperAdmin) ──────────────── */}
+        {/* ─── AI Chat (all authenticated roles) ──────────────────────── */}
         <Route
           path="/ai-chat"
-          element={<AIChatPage />}
+          element={
+            <ProtectedRoute roles={['Customer', 'Agent', 'Admin', 'SuperAdmin', 'SUPPORT_AGENT', 'COMPANY_ADMIN', 'SUPER_ADMIN']}>
+              <AIChatPage />
+            </ProtectedRoute>
+          }
         />
+
+        {/* ─── ANALYTICS (Agent + Admin + SuperAdmin only) ─────────────── */}
         <Route
           path="/analytics"
           element={<ProtectedRoute roles={['Agent', 'Admin', 'SuperAdmin', 'SUPPORT_AGENT', 'COMPANY_ADMIN', 'SUPER_ADMIN']}><AnalyticsPage /></ProtectedRoute>}

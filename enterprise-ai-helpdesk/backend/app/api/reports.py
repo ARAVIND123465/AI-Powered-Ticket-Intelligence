@@ -9,7 +9,7 @@ from app.ai.insights import SupportInsightsGenerator
 router = APIRouter(prefix="/reports", tags=["Reports Management"])
 
 # Lock reporting routines down strictly to administrative management roles
-admin_guard = RoleChecker(allowed_roles=["Admin"])
+admin_guard = RoleChecker(allowed_roles=["Admin", "SuperAdmin"])
 
 class ReportRequest(BaseModel):
     report_name: str

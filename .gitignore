@@ -23,6 +23,7 @@ __pycache__/
 *$py.class
 .venv/
 venv/
+venv_arm64/
 ENV/
 env/
 

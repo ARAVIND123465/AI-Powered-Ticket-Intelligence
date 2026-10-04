@@ -7,7 +7,7 @@ from app.rag.index import KBIndex  # Imports your FAISS index query controller
 router = APIRouter(prefix="/search", tags=["Semantic Search"])
 
 # Secure access so that authenticated technicians or users can run KB semantic looks
-authenticated_guard = RoleChecker(allowed_roles=["Customer", "Agent", "Admin"])
+authenticated_guard = RoleChecker(allowed_roles=["Customer", "Agent", "Admin", "SuperAdmin"])
 
 @router.get("/", status_code=status.HTTP_200_OK)
 async def semantic_knowledge_search(

@@ -1,25 +1,21 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import Avatar from '@/components/ui/Avatar';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
-import { Mail, Calendar, Shield, Ticket, CheckCircle2, Clock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Calendar, Shield, Ticket, CheckCircle2, Clock } from 'lucide-react';
 import { formatDate } from '@/utils/formatters';
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  const [showPassword, setShowPassword] = useState(false);
 
   const displayUser = user || {
     full_name: 'John Doe',
     email: 'john@company.com',
-    role: 'Admin' as const,
+    role: 'Customer' as const,
     created_at: '2025-01-15T00:00:00Z',
     id: '1'
   };
-
-  const password = localStorage.getItem('mock_user_password') || 'password123';
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -84,40 +80,14 @@ export default function ProfilePage() {
 
           <div className="flex items-center justify-between py-2">
             <span className="text-sm text-[var(--text-tertiary)]">Password</span>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-[var(--text-primary)] font-mono font-medium">
-                {showPassword ? password : '••••••••'}
-              </span>
-              <button
-                onClick={() => setShowPassword(!showPassword)}
-                className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer"
-                title={showPassword ? 'Hide Password' : 'Show Password'}
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
+            <span className="text-sm text-[var(--text-primary)] font-mono font-medium">
+              ••••••••
+            </span>
           </div>
         </div>
       </Card>
 
-      {/* Administrator Unique Key Card */}
-      {displayUser.role === 'Admin' && (
-        <Card>
-          <div className="flex items-center gap-2 mb-3">
-            <Shield className="w-5 h-5 text-red-400" />
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Administrator Security Key</h3>
-          </div>
-          <p className="text-xs text-[var(--text-tertiary)] mb-4">
-            This is a secure, unique security bypass code assigned only to verified administrators of the AI Helpdesk Platform.
-          </p>
-          <div className="flex items-center justify-between p-3.5 bg-red-500/5 border border-red-500/20 rounded-xl">
-            <span className="text-xs text-red-400 font-semibold">Admin Access Code</span>
-            <span className="text-sm font-mono text-[var(--text-primary)] font-bold bg-[var(--bg-tertiary)] px-2.5 py-1 rounded border border-[var(--border-primary)] select-all select-text">
-              ADM-SECURE-99238-BYPASS
-            </span>
-          </div>
-        </Card>
-      )}
+
     </div>
   );
 }

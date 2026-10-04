@@ -9,8 +9,8 @@ from app.auth.roles import RoleChecker
 router = APIRouter(prefix="/users", tags=["Users"])
 
 # Define explicit role dependencies matching your security clearances
-admin_guard = RoleChecker(allowed_roles=["Admin"])
-all_authenticated_guard = RoleChecker(allowed_roles=["Customer", "Agent", "Admin"])
+admin_guard = RoleChecker(allowed_roles=["Admin", "SuperAdmin"])
+all_authenticated_guard = RoleChecker(allowed_roles=["Customer", "Agent", "Admin", "SuperAdmin"])
 
 @router.get("/me", response_model=schemas.UserResponse)
 def get_current_user_profile(
@@ -20,8 +20,8 @@ def get_current_user_profile(
     """
     Retrieves the contextual profile details belonging to the actively logged-in identity token.
     """
-    user_email = current_user_claim.get("sub")
-    user = db.query(models.User).filter(models.User.email == user_email).first()
+    user_email = (current_user_claim.get("sub") or "").strip().lower()
+    user = db.query(models.User).filter(models.User.email.ilike(user_email)).first()
     
     if not user:
         raise HTTPException(

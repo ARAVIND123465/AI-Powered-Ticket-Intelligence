@@ -186,17 +186,83 @@ class _OpenAIBackend:
                 yield delta
 
 
+class _GeminiBackend:
+    name = "gemini"
+
+    def __init__(self, config: ChatbotConfig):
+        import google.generativeai as genai
+        from app.core.config import settings
+        api_key = getattr(settings, "GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY not configured")
+        genai.configure(api_key=api_key)
+        self._model = genai.GenerativeModel("gemini-2.5-flash")
+        self._config = config
+
+    def complete(self, system: str, messages: List[ChatMessage]) -> str:
+        prompt = f"{system}\n\n"
+        for m in messages:
+            prompt += f"{m.role.capitalize()}: {m.content}\n"
+        prompt += "Assistant: "
+        try:
+            resp = self._model.generate_content(prompt)
+            return resp.text.strip() if hasattr(resp, "text") and resp.text else ""
+        except Exception as e:
+            logger.warning("Gemini generation failed: %s, falling back to context", e)
+            if "CONTEXT:" in system:
+                ctx = system.split("CONTEXT:")[1].strip()
+                if ctx:
+                    return f"Based on the verified knowledge base articles:\n{ctx}"
+            return self._config.no_context_message
+
+    def stream(
+        self, system: str, messages: List[ChatMessage]
+    ) -> Generator[str, None, None]:
+        text = self.complete(system, messages)
+        yield text
+
+
+class _FallbackBackend:
+    name = "fallback"
+
+    def __init__(self, config: ChatbotConfig):
+        self._config = config
+
+    def complete(self, system: str, messages: List[ChatMessage]) -> str:
+        if "CONTEXT:" in system:
+            ctx = system.split("CONTEXT:")[1].strip()
+            if ctx:
+                return f"Based on the knowledge base:\n{ctx}"
+        return self._config.no_context_message
+
+    def stream(
+        self, system: str, messages: List[ChatMessage]
+    ) -> Generator[str, None, None]:
+        yield self.complete(system, messages)
+
+
 def _build_backend(config: ChatbotConfig):
+    # 1. Try Gemini if configured (native project LLM)
+    try:
+        return _GeminiBackend(config)
+    except Exception as exc:
+        logger.info("Gemini backend not initialized: %s", exc)
+
+    # 2. Try Anthropic
     if config.provider == "anthropic":
         try:
             return _AnthropicBackend(config)
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("Anthropic backend unavailable (%s), trying OpenAI.", exc)
-            return _OpenAIBackend(config)
-    elif config.provider == "openai":
+        except Exception as exc:
+            logger.warning("Anthropic backend unavailable: %s", exc)
+
+    # 3. Try OpenAI
+    try:
         return _OpenAIBackend(config)
-    else:
-        raise ValueError(f"Unknown RAG_LLM_PROVIDER: {config.provider}")
+    except Exception as exc:
+        logger.info("OpenAI backend unavailable: %s", exc)
+
+    # 4. Safe offline fallback
+    return _FallbackBackend(config)
 
 
 # --------------------------------------------------------------------------- #

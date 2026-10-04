@@ -19,6 +19,7 @@ export interface Token {
   access_token: string;
   token_type: string;
   role: string;
+  user?: User;
 }
 
 // --- User ---
@@ -84,6 +85,7 @@ export interface AIInsights {
   escalation_recommended: boolean;
   is_duplicate: boolean;
   duplicate_matches: DuplicateMatch[];
+  suggested_resolution?: string | null;
   fake_attachment_detected?: boolean;
   fake_file_name?: string | null;
   document_validation?: DocumentValidationResult | null;

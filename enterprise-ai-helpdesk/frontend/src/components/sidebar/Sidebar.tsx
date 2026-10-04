@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Ticket, Plus, BarChart3, Bot, Search, Bell, User,
@@ -6,7 +6,7 @@ import {
   ShieldCheck, Building, ClipboardList, MessageSquare, TrendingUp, Clock,
   CheckCircle,
 } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, normalizeRole } from '@/context/AuthContext';
 import { CUSTOMER_NAV, AGENT_NAV, ADMIN_NAV, SUPERADMIN_NAV } from '@/constants';
 import { cn } from '@/utils/cn';
 import Avatar from '@/components/ui/Avatar';
@@ -77,9 +77,10 @@ interface SidebarProps {
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { user, role, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const portalKey = (role as keyof typeof PORTAL_IDENTITY) || 'Customer';
-  const portal = PORTAL_IDENTITY[portalKey] || PORTAL_IDENTITY.Customer;
+  const canonicalRole = normalizeRole(role);
+  const portal = PORTAL_IDENTITY[canonicalRole] || PORTAL_IDENTITY.Customer;
 
   const isActive = (path: string) =>
     location.pathname === path ||
@@ -171,7 +172,10 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               <p className={cn('text-[10px] font-medium truncate', portal.badge.split(' ')[1])}>{user.role}</p>
             </div>
             <button
-              onClick={logout}
+              onClick={() => {
+                logout();
+                navigate('/login', { replace: true });
+              }}
               className="p-1.5 rounded-lg text-[var(--text-tertiary)] hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
               title="Sign Out"
             >

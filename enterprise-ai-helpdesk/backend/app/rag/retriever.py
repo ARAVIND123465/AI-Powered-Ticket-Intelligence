@@ -47,9 +47,9 @@ class RetrieverConfig:
     top_k: int = 5
     # over-fetch multiplier before re-ranking/dedup trims back down to top_k
     fetch_multiplier: int = 4
-    # chunks scoring below this cosine similarity are dropped entirely
+    # chunks scoring below this similarity are dropped entirely
     # rather than handed to the LLM as weak/misleading context
-    min_score: float = 0.22
+    min_score: float = 0.05
     # per-source relevance weighting applied on top of raw vector score
     source_weights: Dict[str, float] = field(
         default_factory=lambda: {

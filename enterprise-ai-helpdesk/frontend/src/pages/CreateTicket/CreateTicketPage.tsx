@@ -111,8 +111,9 @@ export default function CreateTicketPage() {
 
       // 2. Ingest into the backend API database (if online)
       let aiInsightsResponse: AIInsights | null = null;
+      let createdTicket: any = null;
       try {
-        const createdTicket = await ticketService.create({
+        createdTicket = await ticketService.create({
           subject: data.subject,
           description: data.description,
           category_override: data.category,
@@ -129,25 +130,37 @@ export default function CreateTicketPage() {
         console.warn("FastAPI backend is offline or creation errored. Operating in fallback client mode.", err);
       }
 
-      // 3. Add to ticketStore so the dashboard counts change dynamically!
+      // 3. Add to ticketStore with full AI intelligence metadata
       const isDetectedFake = isFakeFile || (docValidation ? !docValidation.is_ticket : false);
+      const finalCategory = createdTicket?.category || data.category;
+      const finalPriority = createdTicket?.priority || aiInsightsResponse?.predicted_priority || (data.category === 'Payment' || data.category === 'Security' ? 'High' : 'Medium');
+      const finalSentiment = createdTicket?.sentiment || aiInsightsResponse?.sentiment || 'Neutral';
+      const isDup = createdTicket?.is_duplicate || aiInsightsResponse?.is_duplicate || false;
+      const finalRes = createdTicket?.ai_suggested_resolution || aiInsightsResponse?.suggested_resolution || null;
+      const finalRootCause = createdTicket?.ai_root_cause || null;
+
       ticketStore.addTicket(
         data.subject,
         data.description,
-        data.category,
-        data.category === 'Payment' || data.category === 'Security' ? 'High' : 'Medium',
-        'Negative',
+        finalCategory,
+        finalPriority,
+        finalSentiment,
         isDetectedFake,
         file ? file.name : null,
         pdfExtractedText,
-        pdfSummary
+        pdfSummary,
+        null,
+        createdTicket?.id,
+        isDup,
+        finalRes,
+        finalRootCause
       );
 
       // 4. Render AI insights panel
       if (aiInsightsResponse) {
         setAiPreview(aiInsightsResponse);
       } else {
-        showPreview(data.category, isDetectedFake, file ? file.name : null, docValidation);
+        showPreview(finalCategory, isDetectedFake, file ? file.name : null, docValidation);
       }
 
       toast.success("Ticket submitted successfully!");

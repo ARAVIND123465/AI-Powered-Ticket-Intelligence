@@ -7,7 +7,7 @@ from app.services.analytics_service import AnalyticsService
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 # Secure analytics tracking exclusively for staff operators and system admins
-internal_staff_guard = RoleChecker(allowed_roles=["Agent", "Admin"])
+internal_staff_guard = RoleChecker(allowed_roles=["Agent", "Admin", "SuperAdmin"])
 
 @router.get("/predictions", status_code=status.HTTP_200_OK)
 async def get_predictive_volume_analysis(

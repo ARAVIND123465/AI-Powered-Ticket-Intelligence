@@ -8,8 +8,8 @@ import { Mail, Lock, ShieldCheck, Building } from 'lucide-react';
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('customer@demo.com');
+  const [password, setPassword] = useState('password123');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -18,23 +18,8 @@ export default function LoginPage() {
     setError('');
     setIsLoading(true);
     try {
-      const isSuper = email.toLowerCase().includes('super');
-      const isAdmin = email.toLowerCase().includes('admin');
-      const isAgent = email.toLowerCase().includes('agent');
-      const detectedRole = isSuper ? 'SuperAdmin' : isAdmin ? 'Admin' : isAgent ? 'Agent' : 'Customer';
-      
-      localStorage.setItem('user_role', detectedRole);
-      await login(email, password);
-      
-      if (detectedRole === 'SuperAdmin') {
-        window.location.href = '/super-admin';
-      } else if (detectedRole === 'Admin') {
-        window.location.href = '/company-admin';
-      } else if (detectedRole === 'Agent') {
-        window.location.href = '/agent';
-      } else {
-        window.location.href = '/customer';
-      }
+      const { targetRoute } = await login(email, password);
+      navigate(targetRoute, { replace: true });
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Invalid credentials. Please try again.');
     } finally {
@@ -55,11 +40,16 @@ export default function LoginPage() {
         </div>
       )}
 
+      {/* Default login notice */}
+      <div className="mb-4 px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 flex items-center justify-between">
+        <span>✨ Default login active — any password is accepted</span>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           label="Email"
           type="email"
-          placeholder="you@example.com"
+          placeholder="customer@demo.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           icon={<Mail className="w-4 h-4" />}
@@ -68,7 +58,7 @@ export default function LoginPage() {
         <Input
           label="Password"
           type="password"
-          placeholder="••••••••"
+          placeholder="Enter any password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           icon={<Lock className="w-4 h-4" />}

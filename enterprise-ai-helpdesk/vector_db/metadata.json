@@ -1,0 +1,34 @@
+[
+  {
+    "chunk_id": "kb_1",
+    "doc_id": "vpn_issues",
+    "title": "VPN connection drops every 30 minutes",
+    "url": "/kb/vpn-connection-drops",
+    "source": "kb",
+    "text": "If your corporate VPN connection disconnects automatically every 30 minutes, it is likely due to the security group re-authentication lease limit. Check your active session token in the identity provider. Restarting the client or clearing local profile cache solves most drops."
+  },
+  {
+    "chunk_id": "kb_2",
+    "doc_id": "refund_errors",
+    "title": "Cannot process refund for order",
+    "url": "/kb/cannot-process-refund",
+    "source": "kb",
+    "text": "Refund processing failures usually happen when the transaction gateway response code is 402 or the invoice reference number is malformed. Verify invoice syntax (starts with INV-) and check if payment gateway account balance is sufficient."
+  },
+  {
+    "chunk_id": "kb_3",
+    "doc_id": "sso_forbidden",
+    "title": "SSO login returning 403 forbidden",
+    "url": "/kb/sso-login-forbidden",
+    "source": "kb",
+    "text": "Active Directory Federation Services (ADFS) or Okta SSO login returning HTTP status code 403 Forbidden indicates that the corporate user group role mapping does not align with helpdesk permissions. Contact AD Admin to verify group policy memberships."
+  },
+  {
+    "chunk_id": "kb_4",
+    "doc_id": "safari_rendering",
+    "title": "Dashboard charts not loading on Safari",
+    "url": "/kb/dashboard-safari-issue",
+    "source": "kb",
+    "text": "The Safari rendering engine blocks SVG layouts that exceed 8192px viewport bounds. Clear your browser history, check console logs for resource errors, and use Chrome or Firefox as a workaround if security controls permit."
+  }
+]

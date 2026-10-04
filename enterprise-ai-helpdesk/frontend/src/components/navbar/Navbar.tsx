@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Moon, Sun, Search, Menu, LogOut, User, Settings, ChevronDown } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, roleHome, normalizeRole } from '@/context/AuthContext';
 import Avatar from '@/components/ui/Avatar';
 import Badge from '@/components/ui/Badge';
 import { cn } from '@/utils/cn';
@@ -18,16 +18,6 @@ const ROLE_BADGE: Record<string, { label: string; color: string }> = {
   SuperAdmin: { label: 'Super Admin', color: 'text-red-400' },
 };
 
-const roleHome = (role: string | null): string => {
-  if (!role) return '/';
-  const r = role.toUpperCase();
-  if (r === 'SUPER_ADMIN' || r === 'SUPERADMIN') return '/platform/dashboard';
-  if (r === 'COMPANY_ADMIN' || r === 'ADMIN' || r === 'COMPANYADMIN') return '/company-admin/dashboard';
-  if (r === 'SUPPORT_AGENT' || r === 'AGENT' || r === 'SUPPORTAGENT') return '/agent/dashboard';
-  if (r === 'CUSTOMER') return '/customer/dashboard';
-  return '/';
-};
-
 export default function Navbar({ onMenuClick }: NavbarProps) {
   const { theme, toggleTheme } = useTheme();
   const { user, role, logout } = useAuth();
@@ -35,7 +25,8 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const roleMeta = ROLE_BADGE[role || 'Customer'] || ROLE_BADGE.Customer;
+  const canonicalRole = normalizeRole(role);
+  const roleMeta = ROLE_BADGE[canonicalRole] || ROLE_BADGE.Customer;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +39,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   const handleLogout = () => {
     setShowDropdown(false);
     logout();
-    navigate('/');
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -148,31 +139,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                   )}
                 </div>
 
-                {/* Switch Role (dev shortcut) */}
-                <div className="border-t border-[var(--border-primary)] pt-1.5 pb-1">
-                  <div className="px-4 py-1 text-[9px] uppercase font-bold text-[var(--text-tertiary)] tracking-widest">
-                    Dev: Switch Role
-                  </div>
-                  {(['SuperAdmin', 'Admin', 'Agent', 'Customer'] as const).map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => {
-                        localStorage.setItem('user_role', r);
-                        const home = r === 'Customer' ? '/customer/dashboard' : r === 'Agent' ? '/agent/dashboard' : r === 'SuperAdmin' ? '/platform/dashboard' : '/company-admin/dashboard';
-                        window.location.href = home;
-                      }}
-                      className={cn(
-                        'w-full text-left px-4 py-1.5 text-xs flex items-center justify-between transition-colors',
-                        role === r
-                          ? 'text-primary-400 font-bold bg-primary-500/10'
-                          : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
-                      )}
-                    >
-                      <span>{r}</span>
-                      {role === r && <span className="text-[10px] text-primary-400">✓</span>}
-                    </button>
-                  ))}
-                </div>
+                {/* Role switcher intentionally removed — roles are determined server-side via JWT only */}
 
                 {/* Logout */}
                 <div className="border-t border-[var(--border-primary)] pt-1">

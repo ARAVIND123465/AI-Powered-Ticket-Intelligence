@@ -1,0 +1,188 @@
+subject,description,category,priority
+cannot install latest desktop client update,the updater fails at 85% with an error code err_disk_perm.,Software,Medium
+Billing cycle query and pricing information,When will my next billing cycle start and how can I change my payment credit card? Please assist as soon as possible.,Billing,Low
+Delete my user account and personal data,I wish to close my account and request GDPR data deletion for all my stored records.,Account,Medium
+[Urgent] Delayed shipment for order,Order was supposed to arrive two days ago. Tracking status has not updated.,Delivery,Medium
+package marked delivered but not received,"courier tracking status shows package was delivered, but nothing arrived at my address.",Delivery,High
+feature request: slack notification integration,can we get real-time ticket alerts delivered directly into a slack channel?,Feature Request,Low
+Monitor HDMI port not detecting video signal,External Dell monitor does not receive display signal from USB-C dock.,Hardware,Low
+transaction failed at final payment stage,"attempted payment via debit card, received transaction failure message but money deducted.",Payment,High
+[Urgent] Malware detected on workstation,Antivirus software quarantined a suspicious Trojan binary in the downloads folder.,Security,Critical
+money taken from account but booking unsuccessful,my money was debited but the ticket booking was cancelled and marked failed.,Payment,High
+Change account email address,Need assistance updating the primary email address on my corporate helpdesk account.,Account,Low
+UI formatting broken on tablet screen,Text overlaps the navigation bar when viewing dashboard in portrait mode on iPad. Please assist as soon as possible.,Bug,Low
+Suspected phishing email received by team,Received an email pretending to be IT security asking for password verification. Please assist as soon as possible.,Security,High
+[Urgent] Change delivery shipping address,Need to change the delivery address before the shipment leaves the fulfillment center.,Delivery,Medium
+data loss detected in customer database,critical incident: records from the last 2 hours are missing from database tables.,Security,Critical
+Production payment processing completely down,All customer checkouts failing worldwide. Immediate emergency response required.,Payment,Critical
+Request access to production database,Need read-only access to customer production database for debugging transaction errors.,Access Control,Medium
+how does the ticket intelligence scoring work,could you provide documentation on how ai priority ratings are calculated?,General Inquiry,Low
+change delivery shipping address,need to change the delivery address before the shipment leaves the fulfillment center.,Delivery,Medium
+account locked after multiple failed attempts,my account has been locked. please unlock it so i can access my workspace.,Login,High
+Request access to production database,Need read-only access to customer production database for debugging transaction errors. Please assist as soon as possible.,Access Control,Medium
+Complete system outage production down,All users affected. The entire production website is down and throwing 502 bad gateway. Please assist as soon as possible.,Technical,Critical
+Laptop screen flickering and going black,The display on my ThinkPad flickers whenever the hinge is moved. Please assist as soon as possible.,Hardware,Medium
+refund status inquiry,it has been 10 days since my return was accepted. when will my refund credit appear?,Refund,Medium
+[Urgent] Change account email address,Need assistance updating the primary email address on my corporate helpdesk account.,Account,Low
+Requesting refund for cancelled flight,My flight was cancelled by the airline and I would like a full refund to my bank.,Refund,High
+ui formatting broken on tablet screen,text overlaps the navigation bar when viewing dashboard in portrait mode on ipad.,Bug,Low
+Software license key activation failed,Entered the enterprise product key but received error key is invalid or expired.,Software,Medium
+Where is my refund,Refund was promised within 3 to 5 business days but still not received in my account.,Refund,High
+vpn connection drops every 30 minutes,corporate vpn disconnects automatically every 30 minutes due to lease limit.,Network,Medium
+[Urgent] Overcharged on monthly statement,My monthly invoice is higher than the agreed rate. Please adjust the billing charges.,Billing,Medium
+vpn not connecting since this morning,i cannot connect to the office vpn. the client hangs at authenticating.,Network,High
+[Urgent] UI formatting broken on tablet screen,Text overlaps the navigation bar when viewing dashboard in portrait mode on iPad.,Bug,Low
+Account locked after multiple failed attempts,My account has been locked. Please unlock it so I can access my workspace. Please assist as soon as possible.,Login,High
+Data loss detected in customer database,Critical incident: records from the last 2 hours are missing from database tables. Please assist as soon as possible.,Security,Critical
+[Urgent] DNS resolution failure for internal domains,Cannot access internal dev servers via hostname. DNS server unreachable.,Network,High
+[Urgent] Feature request: Slack notification integration,Can we get real-time ticket alerts delivered directly into a Slack channel?,Feature Request,Low
+change account email address,need assistance updating the primary email address on my corporate helpdesk account.,Account,Low
+[Urgent] Suspected phishing email received by team,Received an email pretending to be IT security asking for password verification.,Security,High
+[Urgent] Complete system outage production down,All users affected. The entire production website is down and throwing 502 bad gateway.,Technical,Critical
+Feature request: Slack notification integration,Can we get real-time ticket alerts delivered directly into a Slack channel? Please assist as soon as possible.,Feature Request,Low
+Cannot login to account,I am getting invalid password error repeatedly when trying to log into my corporate portal. Please assist as soon as possible.,Login,High
+Need invoice for tax purposes,Can you please email me the official VAT invoice and tax receipt for my last subscription?,Billing,Low
+[Urgent] VPN not connecting since this morning,I cannot connect to the office VPN. The client hangs at authenticating.,Network,High
+office wi-fi slow and dropping packets,severe packet loss on the 5th floor wireless network affecting video calls.,Network,Medium
+Charged twice for the same booking,I noticed duplicate charges on my credit card statement for transaction ORD-9921. Please assist as soon as possible.,Payment,High
+Account locked after multiple failed attempts,My account has been locked. Please unlock it so I can access my workspace.,Login,High
+Delayed shipment for order,Order was supposed to arrive two days ago. Tracking status has not updated. Please assist as soon as possible.,Delivery,Medium
+Revoke access for departing employee,Please immediately revoke all system credentials and SSO access for employee ID 9921.,Access Control,High
+Dashboard charts not loading on Safari,Charts display blank canvas with SVG rendering error on Safari browser.,Bug,Medium
+Billing cycle query and pricing information,When will my next billing cycle start and how can I change my payment credit card?,Billing,Low
+[Urgent] Cancel booking and issue refund,I need to cancel my trip due to illness. Please issue an immediate refund.,Refund,High
+[Urgent] Feature request: Dark mode support,Would love to see a native dark mode theme added to the web application.,Feature Request,Low
+[Urgent] Export to CSV button does not respond,Clicking export reports to Excel or CSV triggers no download action.,Bug,Low
+[Urgent] Database connection pool timeout error,Backend API logs show database connection pool exhausted resulting in service degradation.,Technical,Critical
+Change delivery shipping address,Need to change the delivery address before the shipment leaves the fulfillment center.,Delivery,Medium
+[Urgent] SSO login returning 403 forbidden,Single sign-on via Okta fails with 403 forbidden access denied error.,Login,High
+[Urgent] Revoke access for departing employee,Please immediately revoke all system credentials and SSO access for employee ID 9921.,Access Control,High
+[Urgent] Payment deducted but booking failed,"The amount of $45 was deducted from my bank account, but no booking confirmation was generated.",Payment,High
+[Urgent] Laptop screen flickering and going black,The display on my ThinkPad flickers whenever the hinge is moved.,Hardware,Medium
+Transaction failed at final payment stage,"Attempted payment via debit card, received transaction failure message but money deducted. Please assist as soon as possible.",Payment,High
+request access to production database,need read-only access to customer production database for debugging transaction errors.,Access Control,Medium
+Office printer paper jam and offline,Main floor laser printer is jammed and shows offline error on print server. Please assist as soon as possible.,Hardware,Low
+dashboard charts not loading on safari,charts display blank canvas with svg rendering error on safari browser.,Bug,Medium
+[Urgent] Billing cycle query and pricing information,When will my next billing cycle start and how can I change my payment credit card?,Billing,Low
+Laptop screen flickering and going black,The display on my ThinkPad flickers whenever the hinge is moved.,Hardware,Medium
+[Urgent] Cannot login to account,I am getting invalid password error repeatedly when trying to log into my corporate portal.,Login,High
+security alert unauthorized login from unknown ip,received security alert about login attempt from another country.,Security,Critical
+Unexpected renewal charge on my card,My card was charged for annual subscription renewal without prior notice.,Billing,Medium
+Office printer paper jam and offline,Main floor laser printer is jammed and shows offline error on print server.,Hardware,Low
+sso login returning 403 forbidden,single sign-on via okta fails with 403 forbidden access denied error.,Login,High
+Change delivery shipping address,Need to change the delivery address before the shipment leaves the fulfillment center. Please assist as soon as possible.,Delivery,Medium
+Office Wi-Fi slow and dropping packets,Severe packet loss on the 5th floor wireless network affecting video calls. Please assist as soon as possible.,Network,Medium
+Overcharged on monthly statement,My monthly invoice is higher than the agreed rate. Please adjust the billing charges. Please assist as soon as possible.,Billing,Medium
+[Urgent] How to update profile picture,I would like to know how to change my profile picture and display avatar.,Account,Low
+Feature request: Dark mode support,Would love to see a native dark mode theme added to the web application. Please assist as soon as possible.,Feature Request,Low
+monitor hdmi port not detecting video signal,external dell monitor does not receive display signal from usb-c dock.,Hardware,Low
+Workstation will not turn on,Desktop PC shows no power LED and will not boot when power button is pressed. Please assist as soon as possible.,Hardware,High
+[Urgent] Password reset link not arriving,Requested password reset email multiple times but no verification email received.,Login,Medium
+Change account email address,Need assistance updating the primary email address on my corporate helpdesk account. Please assist as soon as possible.,Account,Low
+General inquiry regarding support business hours,What are the standard SLA response times and weekend support hours? Please assist as soon as possible.,General Inquiry,Low
+charged twice for the same booking,i noticed duplicate charges on my credit card statement for transaction ord-9921.,Payment,High
+Add user to GitHub engineering organization,New hire onboarding: please grant developer permissions to the enterprise repos. Please assist as soon as possible.,Access Control,Low
+VPN connection drops every 30 minutes,Corporate VPN disconnects automatically every 30 minutes due to lease limit. Please assist as soon as possible.,Network,Medium
+Payment gateway error 500 during checkout,When I tried to submit payment via credit card the gateway timed out and charged me. Please assist as soon as possible.,Payment,High
+Delete my user account and personal data,I wish to close my account and request GDPR data deletion for all my stored records. Please assist as soon as possible.,Account,Medium
+[Urgent] Delete my user account and personal data,I wish to close my account and request GDPR data deletion for all my stored records.,Account,Medium
+[Urgent] Production payment processing completely down,All customer checkouts failing worldwide. Immediate emergency response required.,Payment,Critical
+malware detected on workstation,antivirus software quarantined a suspicious trojan binary in the downloads folder.,Security,Critical
+dns resolution failure for internal domains,cannot access internal dev servers via hostname. dns server unreachable.,Network,High
+export to csv button does not respond,clicking export reports to excel or csv triggers no download action.,Bug,Low
+Feature request: Slack notification integration,Can we get real-time ticket alerts delivered directly into a Slack channel?,Feature Request,Low
+Data loss detected in customer database,Critical incident: records from the last 2 hours are missing from database tables.,Security,Critical
+Need invoice for tax purposes,Can you please email me the official VAT invoice and tax receipt for my last subscription? Please assist as soon as possible.,Billing,Low
+Payment deducted but booking failed,"The amount of $45 was deducted from my bank account, but no booking confirmation was generated.",Payment,High
+General inquiry regarding support business hours,What are the standard SLA response times and weekend support hours?,General Inquiry,Low
+[Urgent] Refund status inquiry,It has been 10 days since my return was accepted. When will my refund credit appear?,Refund,Medium
+unable to update account information,"whenever i edit my phone number or email in profile settings, the changes do not save.",Account,Medium
+requesting refund for cancelled flight,my flight was cancelled by the airline and i would like a full refund to my bank.,Refund,High
+[Urgent] Need invoice for tax purposes,Can you please email me the official VAT invoice and tax receipt for my last subscription?,Billing,Low
+[Urgent] VPN connection drops every 30 minutes,Corporate VPN disconnects automatically every 30 minutes due to lease limit.,Network,Medium
+cannot login to account,i am getting invalid password error repeatedly when trying to log into my corporate portal.,Login,High
+Money taken from account but booking unsuccessful,My money was debited but the ticket booking was cancelled and marked failed.,Payment,High
+office printer paper jam and offline,main floor laser printer is jammed and shows offline error on print server.,Hardware,Low
+where is my refund,refund was promised within 3 to 5 business days but still not received in my account.,Refund,High
+Security alert unauthorized login from unknown IP,Received security alert about login attempt from another country. Please assist as soon as possible.,Security,Critical
+Overcharged on monthly statement,My monthly invoice is higher than the agreed rate. Please adjust the billing charges.,Billing,Medium
+[Urgent] General inquiry regarding support business hours,What are the standard SLA response times and weekend support hours?,General Inquiry,Low
+[Urgent] Workstation will not turn on,Desktop PC shows no power LED and will not boot when power button is pressed.,Hardware,High
+Production payment processing completely down,All customer checkouts failing worldwide. Immediate emergency response required. Please assist as soon as possible.,Payment,Critical
+need invoice for tax purposes,can you please email me the official vat invoice and tax receipt for my last subscription?,Billing,Low
+Complete system outage production down,All users affected. The entire production website is down and throwing 502 bad gateway.,Technical,Critical
+Malware detected on workstation,Antivirus software quarantined a suspicious Trojan binary in the downloads folder. Please assist as soon as possible.,Security,Critical
+delete my user account and personal data,i wish to close my account and request gdpr data deletion for all my stored records.,Account,Medium
+Where is my refund,Refund was promised within 3 to 5 business days but still not received in my account. Please assist as soon as possible.,Refund,High
+[Urgent] Office printer paper jam and offline,Main floor laser printer is jammed and shows offline error on print server.,Hardware,Low
+Software license key activation failed,Entered the enterprise product key but received error key is invalid or expired. Please assist as soon as possible.,Software,Medium
+Unable to update account information,"Whenever I edit my phone number or email in profile settings, the changes do not save.",Account,Medium
+Unable to process refund for order,The customer service portal displays an error whenever I request refund for order #1234.,Refund,High
+VPN not connecting since this morning,I cannot connect to the office VPN. The client hangs at authenticating. Please assist as soon as possible.,Network,High
+add user to github engineering organization,new hire onboarding: please grant developer permissions to the enterprise repos.,Access Control,Low
+payment deducted but booking failed,"the amount of $45 was deducted from my bank account, but no booking confirmation was generated.",Payment,High
+suspected phishing email received by team,received an email pretending to be it security asking for password verification.,Security,High
+billing cycle query and pricing information,when will my next billing cycle start and how can i change my payment credit card?,Billing,Low
+unexpected renewal charge on my card,my card was charged for annual subscription renewal without prior notice.,Billing,Medium
+[Urgent] Security alert unauthorized login from unknown IP,Received security alert about login attempt from another country.,Security,Critical
+500 Internal Server Error when saving form,Clicking submit triggers a 500 internal server error with uncaught exception in API.,Technical,High
+Cannot install latest desktop client update,The updater fails at 85% with an error code ERR_DISK_PERM. Please assist as soon as possible.,Software,Medium
+[Urgent] Dashboard charts not loading on Safari,Charts display blank canvas with SVG rendering error on Safari browser.,Bug,Medium
+[Urgent] Requesting refund for cancelled flight,My flight was cancelled by the airline and I would like a full refund to my bank.,Refund,High
+database connection pool timeout error,backend api logs show database connection pool exhausted resulting in service degradation.,Technical,Critical
+application crashes immediately on launch,"when opening the mobile app on ios, it crashes after the splash screen.",Technical,High
+Feature request: Dark mode support,Would love to see a native dark mode theme added to the web application.,Feature Request,Low
+DNS resolution failure for internal domains,Cannot access internal dev servers via hostname. DNS server unreachable.,Network,High
+cancel booking and issue refund,i need to cancel my trip due to illness. please issue an immediate refund.,Refund,High
+revoke access for departing employee,please immediately revoke all system credentials and sso access for employee id 9921.,Access Control,High
+Password reset link not arriving,Requested password reset email multiple times but no verification email received. Please assist as soon as possible.,Login,Medium
+Export to CSV button does not respond,Clicking export reports to Excel or CSV triggers no download action.,Bug,Low
+How to update profile picture,I would like to know how to change my profile picture and display avatar. Please assist as soon as possible.,Account,Low
+software license key activation failed,entered the enterprise product key but received error key is invalid or expired.,Software,Medium
+[Urgent] Office Wi-Fi slow and dropping packets,Severe packet loss on the 5th floor wireless network affecting video calls.,Network,Medium
+Monitor HDMI port not detecting video signal,External Dell monitor does not receive display signal from USB-C dock. Please assist as soon as possible.,Hardware,Low
+Application crashes immediately on launch,"When opening the mobile app on iOS, it crashes after the splash screen.",Technical,High
+[Urgent] Transaction failed at final payment stage,"Attempted payment via debit card, received transaction failure message but money deducted.",Payment,High
+Database connection pool timeout error,Backend API logs show database connection pool exhausted resulting in service degradation. Please assist as soon as possible.,Technical,Critical
+two factor authentication 2fa code invalid,the authenticator app otp is rejected every time i enter it on login screen.,Login,High
+Refund status inquiry,It has been 10 days since my return was accepted. When will my refund credit appear?,Refund,Medium
+SSO login returning 403 forbidden,Single sign-on via Okta fails with 403 forbidden access denied error. Please assist as soon as possible.,Login,High
+Cannot install latest desktop client update,The updater fails at 85% with an error code ERR_DISK_PERM.,Software,Medium
+[Urgent] Where is my refund,Refund was promised within 3 to 5 business days but still not received in my account.,Refund,High
+Add user to GitHub engineering organization,New hire onboarding: please grant developer permissions to the enterprise repos.,Access Control,Low
+[Urgent] Two factor authentication 2FA code invalid,The authenticator app OTP is rejected every time I enter it on login screen.,Login,High
+general inquiry regarding support business hours,what are the standard sla response times and weekend support hours?,General Inquiry,Low
+Payment gateway error 500 during checkout,When I tried to submit payment via credit card the gateway timed out and charged me.,Payment,High
+password reset link not arriving,requested password reset email multiple times but no verification email received.,Login,Medium
+Requesting refund for cancelled flight,My flight was cancelled by the airline and I would like a full refund to my bank. Please assist as soon as possible.,Refund,High
+Cancel booking and issue refund,I need to cancel my trip due to illness. Please issue an immediate refund. Please assist as soon as possible.,Refund,High
+[Urgent] Account locked after multiple failed attempts,My account has been locked. Please unlock it so I can access my workspace.,Login,High
+VPN connection drops every 30 minutes,Corporate VPN disconnects automatically every 30 minutes due to lease limit.,Network,Medium
+[Urgent] How does the ticket intelligence scoring work,Could you provide documentation on how AI priority ratings are calculated?,General Inquiry,Low
+how to update profile picture,i would like to know how to change my profile picture and display avatar.,Account,Low
+[Urgent] Unexpected renewal charge on my card,My card was charged for annual subscription renewal without prior notice.,Billing,Medium
+Unable to process refund for order,The customer service portal displays an error whenever I request refund for order #1234. Please assist as soon as possible.,Refund,High
+[Urgent] Charged twice for the same booking,I noticed duplicate charges on my credit card statement for transaction ORD-9921.,Payment,High
+How does the ticket intelligence scoring work,Could you provide documentation on how AI priority ratings are calculated?,General Inquiry,Low
+[Urgent] Software license key activation failed,Entered the enterprise product key but received error key is invalid or expired.,Software,Medium
+Suspected phishing email received by team,Received an email pretending to be IT security asking for password verification.,Security,High
+Package marked delivered but not received,"Courier tracking status shows package was delivered, but nothing arrived at my address.",Delivery,High
+[Urgent] Application crashes immediately on launch,"When opening the mobile app on iOS, it crashes after the splash screen.",Technical,High
+[Urgent] Payment gateway error 500 during checkout,When I tried to submit payment via credit card the gateway timed out and charged me.,Payment,High
+unable to process refund for order,the customer service portal displays an error whenever i request refund for order #1234.,Refund,High
+Transaction failed at final payment stage,"Attempted payment via debit card, received transaction failure message but money deducted.",Payment,High
+Password reset link not arriving,Requested password reset email multiple times but no verification email received.,Login,Medium
+Package marked delivered but not received,"Courier tracking status shows package was delivered, but nothing arrived at my address. Please assist as soon as possible.",Delivery,High
+Application crashes immediately on launch,"When opening the mobile app on iOS, it crashes after the splash screen. Please assist as soon as possible.",Technical,High
+[Urgent] Request access to production database,Need read-only access to customer production database for debugging transaction errors.,Access Control,Medium
+complete system outage production down,all users affected. the entire production website is down and throwing 502 bad gateway.,Technical,Critical
+Workstation will not turn on,Desktop PC shows no power LED and will not boot when power button is pressed.,Hardware,High
+500 Internal Server Error when saving form,Clicking submit triggers a 500 internal server error with uncaught exception in API. Please assist as soon as possible.,Technical,High
+Cannot login to account,I am getting invalid password error repeatedly when trying to log into my corporate portal.,Login,High
+Office Wi-Fi slow and dropping packets,Severe packet loss on the 5th floor wireless network affecting video calls.,Network,Medium
+Money taken from account but booking unsuccessful,My money was debited but the ticket booking was cancelled and marked failed. Please assist as soon as possible.,Payment,High
+[Urgent] Money taken from account but booking unsuccessful,My money was debited but the ticket booking was cancelled and marked failed.,Payment,High
+Dashboard charts not loading on Safari,Charts display blank canvas with SVG rendering error on Safari browser. Please assist as soon as possible.,Bug,Medium
+Unable to update account information,"Whenever I edit my phone number or email in profile settings, the changes do not save. Please assist as soon as possible.",Account,Medium
+delayed shipment for order,order was supposed to arrive two days ago. tracking status has not updated.,Delivery,Medium
+Database connection pool timeout error,Backend API logs show database connection pool exhausted resulting in service degradation.,Technical,Critical

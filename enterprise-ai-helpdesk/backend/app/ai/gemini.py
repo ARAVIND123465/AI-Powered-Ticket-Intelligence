@@ -13,7 +13,7 @@ class GeminiClient:
     def __init__(self):
         # Gracefully pulls from app settings or environment directly
         self.api_key = getattr(settings, "GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
-        self.default_model = "gemini-1.5-flash"  # Highly efficient for operational text
+        self.default_model = "gemini-2.5-flash"  # Highly efficient for operational text
         
         if not self.api_key:
             logger.warning("GEMINI_API_KEY is missing. AI generation features will operate in sandbox mode.")

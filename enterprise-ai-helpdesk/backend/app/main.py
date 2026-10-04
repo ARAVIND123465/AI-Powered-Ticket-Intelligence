@@ -19,16 +19,25 @@ app = FastAPI(
 )
 
 # --- CORS Middleware Configuration ---
-# Allows seamless development integrations between your Vite+TypeScript frontend and FastAPI
+# Supports local development, Vercel deployments (*.vercel.app), and custom domains
+import os
+
+cors_origins_env = os.getenv("CORS_ORIGINS", "")
 origins = [
     "http://localhost:3000",
-    "http://localhost:5173",  # Default Vite server port
-    "http://127.0.0.1:5173"
+    "http://localhost:5173",  # Default Vite dev server port
+    "http://127.0.0.1:5173",
+    "http://localhost:4173",  # Vite preview port
 ]
+if cors_origins_env:
+    for o in cors_origins_env.split(","):
+        if o.strip():
+            origins.append(o.strip())
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

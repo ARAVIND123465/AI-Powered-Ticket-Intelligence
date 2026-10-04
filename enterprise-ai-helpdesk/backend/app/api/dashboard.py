@@ -7,7 +7,7 @@ from app.services.dashboard_service import DashboardService
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
 # Secure endpoints so they are only viewable by corporate helpdesk agents or admins
-internal_staff_guard = RoleChecker(allowed_roles=["Agent", "Admin"])
+internal_staff_guard = RoleChecker(allowed_roles=["Agent", "Admin", "SuperAdmin"])
 
 @router.get("/summary", status_code=status.HTTP_200_OK)
 async def get_dashboard_summary(

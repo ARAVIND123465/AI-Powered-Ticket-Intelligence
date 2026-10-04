@@ -42,24 +42,28 @@ export const ticketStore = {
     attachmentName: string | null = null,
     pdfExtractedText: string | null = null,
     pdfSummary: string | null = null,
-    customEmail: string | null = null
+    customEmail: string | null = null,
+    customId: string | null = null,
+    customIsDuplicate = false,
+    customResolution: string | null = null,
+    customRootCause: string | null = null
   ): Ticket {
     const tickets = this.getTickets();
-    const nextId = `TKT-${1000 + tickets.length + 1}`;
+    const nextId = customId || `TKT-${1000 + tickets.length + 1}`;
     
     const newTicket: Ticket = {
       id: nextId,
       title,
       description,
-      user_id: customEmail || localStorage.getItem('mock_registered_email') || 'user@company.com',
+      user_id: customEmail || localStorage.getItem('mock_registered_email') || 'customer@demo.com',
       status: 'Open',
       category: isFake ? 'Spam' : category,
       priority: isFake ? 'Low' : priority,
       sentiment: isFake ? 'Neutral' : sentiment,
-      is_duplicate: false,
-      escalate_recommended: category === 'Payment' && !isFake,
-      ai_root_cause: isFake ? 'Identified as unwanted/fake/spam attachment data.' : 'Dynamic ML pattern matching.',
-      ai_suggested_resolution: isFake ? 'None required. Blocked spam account.' : 'AI suggested step-by-step resolution steps.',
+      is_duplicate: customIsDuplicate,
+      escalate_recommended: (category === 'Payment' || priority === 'Critical' || priority === 'High') && !isFake,
+      ai_root_cause: customRootCause || (isFake ? 'Identified as unwanted/fake/spam attachment data.' : 'Dynamic ML pattern matching.'),
+      ai_suggested_resolution: customResolution || (isFake ? 'None required. Blocked spam account.' : 'AI suggested step-by-step resolution steps.'),
       attachment: attachmentName,
       pdf_extracted_text: pdfExtractedText,
       pdf_summary: pdfSummary,

@@ -7,7 +7,7 @@ from app.services.notification_service import NotificationService
 router = APIRouter(prefix="/notifications", tags=["Notifications Alert Sync"])
 
 # Secure alerts strictly for active helpdesk operators and team managers
-internal_staff_guard = RoleChecker(allowed_roles=["Agent", "Admin"])
+internal_staff_guard = RoleChecker(allowed_roles=["Agent", "Admin", "SuperAdmin"])
 
 @router.get("/", response_model=List[Dict[str, Any]], status_code=status.HTTP_200_OK)
 async def get_active_system_alerts(

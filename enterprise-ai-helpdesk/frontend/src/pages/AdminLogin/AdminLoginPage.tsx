@@ -35,24 +35,9 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      const targetRole = activeTab === 'super' ? 'SuperAdmin' : activeTab === 'company' ? 'Admin' : 'Agent';
-      localStorage.setItem('user_role', targetRole);
-
-      await login(email, password);
-      
+      const { targetRoute } = await login(email, password);
       toast.success(`Logged in successfully!`);
-      
-      const storedRole = localStorage.getItem('user_role') || targetRole;
-      const r = storedRole.toUpperCase();
-      if (r === 'SUPER_ADMIN' || r === 'SUPERADMIN') {
-        window.location.href = '/platform/dashboard';
-      } else if (r === 'COMPANY_ADMIN' || r === 'ADMIN' || r === 'COMPANYADMIN') {
-        window.location.href = '/company-admin/dashboard';
-      } else if (r === 'SUPPORT_AGENT' || r === 'AGENT' || r === 'SUPPORTAGENT') {
-        window.location.href = '/agent/dashboard';
-      } else {
-        window.location.href = '/customer/dashboard';
-      }
+      navigate(targetRoute, { replace: true });
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Authentication failed. Please check your credentials.');
     } finally {
@@ -119,6 +104,11 @@ export default function AdminLoginPage() {
             {error}
           </div>
         )}
+
+        {/* Default login notice */}
+        <div className="px-3.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400">
+          ✨ Default login active — any password is accepted
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input

@@ -282,7 +282,7 @@ async def analyze_screenshot(
         """
         
         # Load the multimodal gemini model
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash")
         
         # Run content generation asynchronously in the event loop executor with an 8-second timeout safety net
         import asyncio
@@ -445,7 +445,7 @@ Summary of Extracted Content:
         """
         
         # Load the text gemini model
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash")
         
         import asyncio
         loop = asyncio.get_event_loop()
@@ -1255,7 +1255,7 @@ async def validate_document(
         - If the image is a random screenshot, meme, selfie, or unrelated content → is_ticket=false, is_valid=false, fraud_score should be very high (85-100)
         """
 
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash")
 
         import asyncio
         loop = asyncio.get_event_loop()

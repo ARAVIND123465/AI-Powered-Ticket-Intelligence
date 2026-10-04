@@ -1,0 +1,34 @@
+subject,description,category,priority
+[Urgent] Unable to update account information,"Whenever I edit my phone number or email in profile settings, the changes do not save.",Account,Medium
+Security alert unauthorized login from unknown IP,Received security alert about login attempt from another country.,Security,Critical
+Payment deducted but booking failed,"The amount of $45 was deducted from my bank account, but no booking confirmation was generated. Please assist as soon as possible.",Payment,High
+[Urgent] 500 Internal Server Error when saving form,Clicking submit triggers a 500 internal server error with uncaught exception in API.,Technical,High
+[Urgent] Package marked delivered but not received,"Courier tracking status shows package was delivered, but nothing arrived at my address.",Delivery,High
+Malware detected on workstation,Antivirus software quarantined a suspicious Trojan binary in the downloads folder.,Security,Critical
+How to update profile picture,I would like to know how to change my profile picture and display avatar.,Account,Low
+Export to CSV button does not respond,Clicking export reports to Excel or CSV triggers no download action. Please assist as soon as possible.,Bug,Low
+payment gateway error 500 during checkout,when i tried to submit payment via credit card the gateway timed out and charged me.,Payment,High
+workstation will not turn on,desktop pc shows no power led and will not boot when power button is pressed.,Hardware,High
+[Urgent] Cannot install latest desktop client update,The updater fails at 85% with an error code ERR_DISK_PERM.,Software,Medium
+500 internal server error when saving form,clicking submit triggers a 500 internal server error with uncaught exception in api.,Technical,High
+overcharged on monthly statement,my monthly invoice is higher than the agreed rate. please adjust the billing charges.,Billing,Medium
+[Urgent] Unable to process refund for order,The customer service portal displays an error whenever I request refund for order #1234.,Refund,High
+feature request: dark mode support,would love to see a native dark mode theme added to the web application.,Feature Request,Low
+Two factor authentication 2FA code invalid,The authenticator app OTP is rejected every time I enter it on login screen.,Login,High
+production payment processing completely down,all customer checkouts failing worldwide. immediate emergency response required.,Payment,Critical
+Unexpected renewal charge on my card,My card was charged for annual subscription renewal without prior notice. Please assist as soon as possible.,Billing,Medium
+Delayed shipment for order,Order was supposed to arrive two days ago. Tracking status has not updated.,Delivery,Medium
+SSO login returning 403 forbidden,Single sign-on via Okta fails with 403 forbidden access denied error.,Login,High
+Cancel booking and issue refund,I need to cancel my trip due to illness. Please issue an immediate refund.,Refund,High
+Refund status inquiry,It has been 10 days since my return was accepted. When will my refund credit appear? Please assist as soon as possible.,Refund,Medium
+Revoke access for departing employee,Please immediately revoke all system credentials and SSO access for employee ID 9921. Please assist as soon as possible.,Access Control,High
+laptop screen flickering and going black,the display on my thinkpad flickers whenever the hinge is moved.,Hardware,Medium
+Charged twice for the same booking,I noticed duplicate charges on my credit card statement for transaction ORD-9921.,Payment,High
+DNS resolution failure for internal domains,Cannot access internal dev servers via hostname. DNS server unreachable. Please assist as soon as possible.,Network,High
+How does the ticket intelligence scoring work,Could you provide documentation on how AI priority ratings are calculated? Please assist as soon as possible.,General Inquiry,Low
+[Urgent] Data loss detected in customer database,Critical incident: records from the last 2 hours are missing from database tables.,Security,Critical
+Two factor authentication 2FA code invalid,The authenticator app OTP is rejected every time I enter it on login screen. Please assist as soon as possible.,Login,High
+[Urgent] Monitor HDMI port not detecting video signal,External Dell monitor does not receive display signal from USB-C dock.,Hardware,Low
+UI formatting broken on tablet screen,Text overlaps the navigation bar when viewing dashboard in portrait mode on iPad.,Bug,Low
+[Urgent] Add user to GitHub engineering organization,New hire onboarding: please grant developer permissions to the enterprise repos.,Access Control,Low
+VPN not connecting since this morning,I cannot connect to the office VPN. The client hangs at authenticating.,Network,High

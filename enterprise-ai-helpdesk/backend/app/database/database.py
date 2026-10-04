@@ -11,6 +11,21 @@ logger = logging.getLogger("app.database.database")
 # Extract connection string from app configuration; default to local development SQLite
 DATABASE_URL = getattr(settings, "DATABASE_URL", "sqlite:///./enterprise_helpdesk.db")
 
+# In serverless environments (e.g. Vercel), working directory is read-only.
+# Move SQLite database to /tmp so writes succeed.
+if os.environ.get("VERCEL") and DATABASE_URL.startswith("sqlite") and "/tmp" not in DATABASE_URL:
+    import shutil
+    tmp_db = "/tmp/enterprise_helpdesk.db"
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    src_db = os.path.join(current_dir, "..", "..", "enterprise_helpdesk.db")
+    if os.path.exists(src_db) and not os.path.exists(tmp_db):
+        try:
+            shutil.copy2(src_db, tmp_db)
+            logger.info("Copied database to /tmp for Vercel serverless environment.")
+        except Exception as copy_err:
+            logger.warning(f"Could not copy database to /tmp: {copy_err}")
+    DATABASE_URL = f"sqlite:///{tmp_db}"
+
 # Setup engine configurations. Include specialized parameters if using SQLite for test setups
 connect_args = {}
 if DATABASE_URL.startswith("sqlite"):

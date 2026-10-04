@@ -1,4 +1,4 @@
-export const API_BASE_URL = '/api';
+export const API_BASE_URL: string = (import.meta as any).env?.VITE_API_URL || '/api';
 
 export const TICKET_CATEGORIES = [
   'Login', 'Payment', 'Refund', 'Technical', 'Delivery',
@@ -79,7 +79,7 @@ export const AGENT_NAV = {
 
 export const ADMIN_NAV = {
   operations: [
-    { label: 'Dashboard', path: '/dashboard', icon: 'LayoutDashboard' },
+    { label: 'Dashboard', path: '/company-admin/dashboard', icon: 'LayoutDashboard' },
     { label: 'All Tickets', path: '/tickets', icon: 'Ticket' },
     { label: 'Create Ticket', path: '/tickets/create', icon: 'Plus' },
     { label: 'Analytics', path: '/analytics', icon: 'BarChart3' },
@@ -99,8 +99,8 @@ export const ADMIN_NAV = {
 
 export const SUPERADMIN_NAV = {
   platform: [
-    { label: 'Super Admin Hub', path: '/super-admin', icon: 'ShieldCheck' },
-    { label: 'Company Registrations', path: '/super-admin', icon: 'Building' },
+    { label: 'Super Admin Hub', path: '/platform/dashboard', icon: 'ShieldCheck' },
+    { label: 'Company Registrations', path: '/platform/dashboard', icon: 'Building' },
     { label: 'Platform Analytics', path: '/analytics', icon: 'BarChart3' },
   ],
   management: [
