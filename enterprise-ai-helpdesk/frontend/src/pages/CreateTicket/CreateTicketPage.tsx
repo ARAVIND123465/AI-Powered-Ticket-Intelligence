@@ -5,11 +5,12 @@ import TicketForm, { type TicketFormData } from '@/components/ticket/TicketForm'
 import AIInsightsPanel from '@/components/ticket/AIInsightsPanel';
 import ScreenshotAnalyzer from '@/components/ticket/ScreenshotAnalyzer';
 import type { AIInsights, DocumentValidationResult } from '@/types';
-import { Sparkles, Keyboard, Camera } from 'lucide-react';
+import { Sparkles, Keyboard, Camera, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { ticketStore } from '@/utils/ticketStore';
 import { ticketService } from '@/services/ticket.service';
+import { attachmentService } from '@/services/attachment.service';
 
 export default function CreateTicketPage() {
   const navigate = useNavigate();
@@ -126,6 +127,15 @@ export default function CreateTicketPage() {
             document_validation: docValidation,
           };
         }
+
+        // Upload PDF attachment to ticket if present
+        if (createdTicket && file && file.name.toLowerCase().endsWith('.pdf')) {
+          try {
+            await attachmentService.upload(createdTicket.id, file);
+          } catch (uploadErr) {
+            console.warn("Failed to upload PDF attachment to backend database:", uploadErr);
+          }
+        }
       } catch (err) {
         console.warn("FastAPI backend is offline or creation errored. Operating in fallback client mode.", err);
       }
@@ -220,7 +230,7 @@ export default function CreateTicketPage() {
                 : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'
             }`}
           >
-            <Camera className="w-3.5 h-3.5" /> Screenshot (AI)
+            <FileText className="w-3.5 h-3.5" /> PDF / Screenshot (AI)
           </button>
         </div>
       </motion.div>
@@ -233,8 +243,8 @@ export default function CreateTicketPage() {
           className="rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] p-6"
         >
           <div className="flex items-center gap-2 mb-5">
-            <Camera className="w-5 h-5 text-primary-400" />
-            <h2 className="text-sm font-semibold text-[var(--text-primary)]">AI Screenshot Analysis Workspace</h2>
+            <FileText className="w-5 h-5 text-primary-400" />
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">AI PDF & Document Analysis Workspace</h2>
           </div>
           <ScreenshotAnalyzer onApplyAnalysis={handleApplyAnalysis} />
         </motion.div>

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, DateTime, Integer, ForeignKey, Text
+from sqlalchemy import Column, String, Boolean, DateTime, Integer, ForeignKey, Text, Float
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database.database import Base
@@ -49,3 +49,58 @@ class Ticket(Base):
 
     # Link back to user model map
     creator = relationship("User", back_populates="tickets")
+
+    # Relationship to attachments
+    attachments = relationship("TicketAttachment", back_populates="ticket", cascade="all, delete-orphan")
+
+
+class TicketAttachment(Base):
+    """
+    Stores metadata for PDF files uploaded by customers or agents
+    and associated with specific support tickets.
+    """
+    __tablename__ = "ticket_attachments"
+
+    id = Column(String, primary_key=True, index=True)
+    ticket_id = Column(String, ForeignKey("tickets.id"), nullable=False, index=True)
+    uploader_id = Column(String, ForeignKey("users.id"), nullable=False)
+    filename = Column(String, nullable=False)          # Original filename from user
+    stored_filename = Column(String, nullable=False)   # UUID-based filename on disk
+    file_size = Column(Integer, nullable=False)        # Size in bytes
+    content_type = Column(String, default="application/pdf")
+    page_count = Column(Integer, default=0)
+    uploaded_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    ticket = relationship("Ticket", back_populates="attachments")
+    uploader = relationship("User")
+    analyses = relationship("PDFAnalysis", back_populates="attachment", cascade="all, delete-orphan")
+
+
+class PDFAnalysis(Base):
+    """
+    Stores the results of an AI-powered PDF analysis performed by a support agent.
+    Links back to the specific attachment and ticket for traceability.
+    """
+    __tablename__ = "pdf_analyses"
+
+    id = Column(String, primary_key=True, index=True)
+    attachment_id = Column(String, ForeignKey("ticket_attachments.id"), nullable=False, index=True)
+    ticket_id = Column(String, ForeignKey("tickets.id"), nullable=False, index=True)
+    analyzed_by = Column(String, ForeignKey("users.id"), nullable=False)
+
+    # Extracted source text from PDF
+    extracted_text = Column(Text, nullable=True)
+
+    # Structured AI analysis result (stored as JSON string)
+    analysis_result = Column(Text, nullable=False)
+
+    # Metadata
+    model_used = Column(String, default="gemini-2.5-flash")
+    sandbox_mode = Column(Boolean, default=False)
+    analyzed_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    attachment = relationship("TicketAttachment", back_populates="analyses")
+    ticket = relationship("Ticket")
+    analyst = relationship("User")

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database.migrations import run_essential_migrations
 
 # Import every API router built across the workspace suite
-from app.api import auth, tickets, users, dashboard, analytics, chatbot, search, reports, notifications, screenshot
+from app.api import auth, tickets, users, dashboard, analytics, chatbot, search, reports, notifications, screenshot, attachments
 
 # Initialize centralized logging formats
 logging.basicConfig(level=logging.INFO)
@@ -68,6 +68,7 @@ app.include_router(search.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
 app.include_router(notifications.router, prefix="/api")
 app.include_router(screenshot.router, prefix="/api")
+app.include_router(attachments.router, prefix="/api")
 
 @app.get("/")
 def read_root_health_check():

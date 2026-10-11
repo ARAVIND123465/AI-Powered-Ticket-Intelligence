@@ -211,3 +211,46 @@ export interface ReportResponse {
     recommended_kb_additions: string[];
   };
 }
+
+// --- Attachments & PDF Intelligence ---
+export interface TicketAttachment {
+  id: string;
+  ticket_id: string;
+  uploader_id: string;
+  uploader_name?: string;
+  filename: string;
+  file_size: number;
+  page_count: number;
+  content_type: string;
+  uploaded_at: string;
+  has_analysis: boolean;
+}
+
+export interface PDFAnalysisStructured {
+  is_relevant?: boolean;
+  relevance_score?: number;
+  document_classification?: string;
+  irrelevance_reason?: string;
+  document_summary: string;
+  key_information: string;
+  issue_identification: string;
+  possible_root_cause: string;
+  recommended_resolution: string;
+  missing_information: string;
+  customer_response_draft: string;
+  evidence_and_references: string;
+  confidence_and_limitations: string;
+}
+
+export interface PDFAnalysisResult {
+  id: string;
+  attachment_id: string;
+  ticket_id: string;
+  analyzed_by: string;
+  analyst_name?: string;
+  analysis_result: string; // JSON string or raw text
+  model_used: string;
+  sandbox_mode: boolean;
+  analyzed_at: string;
+}
+

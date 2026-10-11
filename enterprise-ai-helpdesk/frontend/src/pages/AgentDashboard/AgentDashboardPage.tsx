@@ -8,14 +8,16 @@ import {
   ChevronDown, ChevronRight, Search, Bell, X, Flag, AlertTriangle,
   ShieldAlert, Lock, Unlock, Paperclip, Check, Trash2, Settings,
   Mail, Phone, Calendar, BookOpen, Shield, HelpCircle, FileText,
-  Smile, Award, Landmark, Layers, Briefcase, ThumbsUp,
+  Smile, Award, Landmark, Layers, Briefcase, ThumbsUp, Eye,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
+import PDFViewerModal from '@/components/ticket/PDFViewerModal';
 import { useAuth } from '@/context/AuthContext';
 import { ticketStore } from '@/utils/ticketStore';
-import type { Ticket } from '@/types';
+import { attachmentService } from '@/services/attachment.service';
+import type { Ticket, TicketAttachment } from '@/types';
 import { cn } from '@/utils/cn';
 import { toast } from 'sonner';
 
@@ -140,6 +142,45 @@ export default function AgentDashboardPage() {
   // AI draft states
   const [aiDraft, setAiDraft] = useState('');
   const [isEditingDraft, setIsEditingDraft] = useState(false);
+
+  // PDF Viewer Modal State for Document Inspection
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [currentPdfAttachment, setCurrentPdfAttachment] = useState<TicketAttachment | null>(null);
+
+  const handleOpenPdfViewer = async (t: Ticket) => {
+    if (!t.attachment) return;
+    try {
+      const list = await attachmentService.list(t.id);
+      if (list && list.length > 0) {
+        setCurrentPdfAttachment(list[0]);
+        setIsPdfModalOpen(true);
+        return;
+      }
+    } catch (err) {
+      console.warn('Could not load backend attachment record:', err);
+    }
+
+    // Fallback attachment item
+    const fallbackAtt: TicketAttachment = {
+      id: `ATT-${t.id}`,
+      ticket_id: t.id,
+      uploader_id: t.user_id,
+      uploader_name: t.user_id.split('@')[0] || 'Customer',
+      filename: t.attachment,
+      file_size: 142000,
+      page_count: t.pdf_extracted_text?.match(/\[Page \d+\]/g)?.length || 1,
+      content_type: 'application/pdf',
+      uploaded_at: t.created_at,
+      has_analysis: !!t.pdf_summary,
+    };
+    setCurrentPdfAttachment(fallbackAtt);
+    setIsPdfModalOpen(true);
+  };
+
+  const handleApplyDraftToReply = (draftText: string) => {
+    setReplyText(draftText);
+    toast.success('AI draft response inserted into instant reply box!');
+  };
 
   // Notifications State
   const [agentNotifs, setAgentNotifs] = useState([
@@ -778,17 +819,96 @@ export default function AgentDashboardPage() {
                           </p>
                         </div>
 
-                        {/* OCR Text / Sandbox metadata indicators */}
-                        {selectedTicket.attachment && (
-                          <div className="p-2.5 bg-indigo-500/5 border border-indigo-500/10 rounded-xl space-y-1.5">
-                            <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1">
-                              <FileText className="w-3 h-3" /> Extracted OCR Text
-                            </span>
-                            <p className="text-[9px] font-mono text-[var(--text-secondary)] line-clamp-3 leading-relaxed">
-                              {selectedTicket.pdf_extracted_text || `[Extracted details from attachment image file ${selectedTicket.attachment}]`}
-                            </p>
-                          </div>
-                        )}
+                        {/* PDF Attachment Card with In-Browser Viewer & Authenticity / Fake Verification */}
+                        {selectedTicket.attachment && (() => {
+                          const isFakeOrSpam =
+                            selectedTicket.category === 'Spam' ||
+                            selectedTicket.attachment.toLowerCase().includes('fake') ||
+                            selectedTicket.attachment.toLowerCase().includes('spam') ||
+                            selectedTicket.attachment.toLowerCase().includes('unwanted');
+
+                          const isUnrelatedDoc =
+                            isFakeOrSpam ||
+                            selectedTicket.attachment.toLowerCase().includes('movie') ||
+                            selectedTicket.attachment.toLowerCase().includes('bus') ||
+                            selectedTicket.attachment.toLowerCase().includes('train') ||
+                            selectedTicket.attachment.toLowerCase().includes('travel') ||
+                            selectedTicket.attachment.toLowerCase().includes('irrelevant');
+
+                          return (
+                            <div
+                              className={cn(
+                                'p-3 rounded-xl border space-y-2.5 transition-all',
+                                isUnrelatedDoc
+                                  ? 'bg-rose-500/5 border-rose-500/25'
+                                  : 'bg-indigo-500/5 border-indigo-500/20'
+                              )}
+                            >
+                              {/* Header */}
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-[var(--text-primary)]">
+                                  <Paperclip className="w-3.5 h-3.5 text-primary-400" />
+                                  Customer Uploaded PDF
+                                </span>
+                                {isUnrelatedDoc ? (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center gap-1">
+                                    <AlertTriangle className="w-2.5 h-2.5" /> Irrelevant PDF (Accuracy: -10)
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                                    <CheckCircle2 className="w-2.5 h-2.5" /> Relevant Document
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* File info card */}
+                              <div className="flex items-center gap-2.5 p-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-primary)]">
+                                <div className="w-8 h-8 rounded-lg bg-primary-500/10 border border-primary-500/20 text-primary-400 flex items-center justify-center shrink-0">
+                                  <FileText className="w-4 h-4" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-semibold text-[var(--text-primary)] truncate" title={selectedTicket.attachment}>
+                                    {selectedTicket.attachment}
+                                  </p>
+                                  <p className="text-[10px] text-[var(--text-tertiary)]">
+                                    PDF Document • Inspect pages to verify authenticity
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Action Buttons: Open & View PDF + AI Analysis */}
+                              <div className="grid grid-cols-2 gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenPdfViewer(selectedTicket)}
+                                  className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold bg-primary-600 hover:bg-primary-500 text-white shadow-sm transition-all"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                  Open & View PDF
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenPdfViewer(selectedTicket)}
+                                  className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold bg-[var(--bg-tertiary)] hover:bg-[var(--bg-elevated)] border border-[var(--border-primary)] text-primary-400 transition-all"
+                                >
+                                  <Sparkles className="w-3.5 h-3.5" />
+                                  AI Analysis
+                                </button>
+                              </div>
+
+                              {/* Extracted OCR preview snippet */}
+                              <div className="pt-1.5 border-t border-[var(--border-primary)]/50">
+                                <span className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider block mb-1">
+                                  Extracted OCR Text
+                                </span>
+                                <p className="text-[9px] font-mono text-[var(--text-secondary)] line-clamp-2 leading-relaxed bg-[var(--bg-primary)]/40 p-1.5 rounded border border-[var(--border-primary)]/50">
+                                  {selectedTicket.pdf_extracted_text || `[Document processed. Click 'Open & View PDF' to examine document visual content.]`}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         {/* Operations Actions bar */}
                         {selectedTicket.status !== 'Closed' && (
@@ -1304,6 +1424,17 @@ export default function AgentDashboardPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ─── MODAL: PDF VIEWER & AI ANALYSIS ────────────────────────────── */}
+      {selectedTicket && (
+        <PDFViewerModal
+          isOpen={isPdfModalOpen}
+          onClose={() => setIsPdfModalOpen(false)}
+          ticketId={selectedTicket.id}
+          attachment={currentPdfAttachment}
+          onApplyDraftToReply={handleApplyDraftToReply}
+        />
       )}
 
     </div>

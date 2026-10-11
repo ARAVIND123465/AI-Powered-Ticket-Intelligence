@@ -40,3 +40,8 @@ vector_db/
 # TypeScript build info
 *.tsbuildinfo
 
+# Uploads
+uploads/
+**/uploads/
+
+

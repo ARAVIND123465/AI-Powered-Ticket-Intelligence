@@ -40,10 +40,14 @@ export default function ScreenshotAnalyzer({ onApplyAnalysis }: ScreenshotAnalyz
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const droppedFile = e.dataTransfer.files[0];
-      if (droppedFile.type.startsWith('image/')) {
+      if (
+        droppedFile.type.startsWith('image/') ||
+        droppedFile.type === 'application/pdf' ||
+        droppedFile.name.toLowerCase().endsWith('.pdf')
+      ) {
         processFile(droppedFile);
       } else {
-        toast.error("Invalid file type. Please upload an image (PNG, JPG, JPEG, WEBP).");
+        toast.error("Invalid file type. Please upload a PDF or an image (PNG, JPG, JPEG, WEBP).");
       }
     }
   }, []);
@@ -74,20 +78,51 @@ export default function ScreenshotAnalyzer({ onApplyAnalysis }: ScreenshotAnalyz
     
     try {
       // Step 1: Uploading
-      await sleep(800);
+      await sleep(600);
       setStep('ocr');
       
-      // Step 2: OCR Text Extraction
-      await sleep(1000);
+      // Step 2: OCR / Document Text Extraction
+      await sleep(800);
       setStep('structuring');
       
-      // Step 3: Call FastAPI screenshot analysis endpoint
-      const result = await ticketService.analyzeScreenshot(file);
+      // Step 3: Call FastAPI analysis endpoint
+      const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+      let resultOcr = '';
+      let resultFields: any = null;
+      let resultSandbox = false;
+
+      if (isPdf) {
+        const pdfRes = await ticketService.analyzePdf(file);
+        resultOcr = pdfRes.pdf_text || pdfRes.summary;
+        resultSandbox = pdfRes.sandbox_mode || false;
+        
+        // Infer category from text
+        const textLower = (pdfRes.pdf_text || '').toLowerCase();
+        let cat = 'General';
+        if (textLower.includes('payment') || textLower.includes('debit') || textLower.includes('refund') || textLower.includes('charge') || textLower.includes('money')) {
+          cat = 'Payment';
+        } else if (textLower.includes('vpn') || textLower.includes('network') || textLower.includes('dns')) {
+          cat = 'Network';
+        } else if (textLower.includes('sso') || textLower.includes('security') || textLower.includes('auth')) {
+          cat = 'Security';
+        }
+
+        resultFields = {
+          category: cat,
+          subject: `Support issue with attached ${file.name.replace(/\.[^/.]+$/, '')}`,
+          description: pdfRes.summary ? `Document analysis summary:\n${pdfRes.summary}` : `Extracted PDF document text:\n${(pdfRes.pdf_text || '').slice(0, 600)}`,
+        };
+      } else {
+        const result = await ticketService.analyzeScreenshot(file);
+        resultOcr = result.ocr_text;
+        resultFields = result.ticket_fields;
+        resultSandbox = result.sandbox_mode;
+      }
       await sleep(600);
       
-      setOcrText(result.ocr_text);
-      setAnalysisResult(result.ticket_fields);
-      setIsSandbox(result.sandbox_mode);
+      setOcrText(resultOcr);
+      setAnalysisResult(resultFields);
+      setIsSandbox(resultSandbox);
 
       // Step 4: Document Validation — Fraud/Fake Detection
       setStep('validating');
@@ -108,22 +143,21 @@ export default function ScreenshotAnalyzer({ onApplyAnalysis }: ScreenshotAnalyz
         }
       } catch (validationErr) {
         logger.error("Document validation failed", validationErr);
-        // Non-blocking: validation failure shouldn't block the regular flow
       }
       
       setStep('done');
       
-      if (result.sandbox_mode) {
+      if (resultSandbox) {
         toast.warning("Gemini API key is not configured. Running in offline sandbox mode.", {
           duration: 5000,
         });
       } else if (!validationResult || validationResult?.is_ticket) {
-        toast.success("AI Screenshot analysis completed successfully!");
+        toast.success(isPdf ? "AI PDF analysis completed successfully!" : "AI Screenshot analysis completed successfully!");
       }
     } catch (err: any) {
       logger.error("Analysis failure", err);
       setStep('error');
-      toast.error(err.response?.data?.detail || "Screenshot analysis failed. Please try again.");
+      toast.error(err.response?.data?.detail || "Document analysis failed. Please try again.");
     }
   };
 
@@ -201,19 +235,19 @@ export default function ScreenshotAnalyzer({ onApplyAnalysis }: ScreenshotAnalyz
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/png, image/jpeg, image/jpg, image/webp"
+            accept="image/png, image/jpeg, image/jpg, image/webp, application/pdf, .pdf"
             className="hidden"
             onChange={handleFileChange}
           />
           <div className="w-12 h-12 rounded-xl bg-primary-500/10 flex items-center justify-center mb-4">
             <Upload className="w-6 h-6 text-primary-400" />
           </div>
-          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Drag and drop screenshot here</h3>
+          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Drag and drop PDF or screenshot here</h3>
           <p className="text-xs text-[var(--text-tertiary)] max-w-xs mx-auto mb-3">
-            Supports PNG, JPG, JPEG, and WEBP. Drag desktop screenshots, mobile app errors, or browser logs directly.
+            Supports PDF documents, PNG, JPG, JPEG, and WEBP. Drag customer receipts, invoices, error logs, or screenshots.
           </p>
           <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); triggerFileInput(); }}>
-            Select Screenshot
+            Select PDF / Screenshot
           </Button>
         </div>
       )}
@@ -345,14 +379,36 @@ export default function ScreenshotAnalyzer({ onApplyAnalysis }: ScreenshotAnalyz
             <div className="rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] overflow-hidden p-3">
               <div className="flex justify-between items-center mb-2 px-1">
                 <span className="text-xs font-semibold text-[var(--text-secondary)] flex items-center gap-1.5">
-                  <FileImage className="w-3.5 h-3.5 text-primary-400" /> Image Preview
+                  {file?.name.toLowerCase().endsWith('.pdf') ? (
+                    <>
+                      <FileText className="w-3.5 h-3.5 text-primary-400" /> PDF Document Preview
+                    </>
+                  ) : (
+                    <>
+                      <FileImage className="w-3.5 h-3.5 text-primary-400" /> Image Preview
+                    </>
+                  )}
                 </span>
                 <button onClick={handleReset} className="text-xs text-red-400 hover:underline">
                   Remove
                 </button>
               </div>
-              <div className="relative aspect-video bg-black rounded-xl overflow-hidden flex items-center justify-center">
-                <img src={previewUrl} alt="Screenshot" className="max-h-full max-w-full object-contain" />
+              <div className="relative aspect-video bg-[var(--bg-tertiary)] rounded-xl overflow-hidden flex items-center justify-center border border-[var(--border-primary)]">
+                {file?.name.toLowerCase().endsWith('.pdf') ? (
+                  <div className="flex flex-col items-center justify-center p-4 text-center space-y-2">
+                    <div className="w-12 h-12 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-400 flex items-center justify-center">
+                      <FileText className="w-6 h-6" />
+                    </div>
+                    <span className="text-xs font-semibold text-[var(--text-primary)] truncate max-w-[200px]" title={file.name}>
+                      {file.name}
+                    </span>
+                    <span className="text-[10px] text-[var(--text-tertiary)]">
+                      PDF Document • {(file.size / 1024).toFixed(1)} KB
+                    </span>
+                  </div>
+                ) : (
+                  <img src={previewUrl} alt="Screenshot" className="max-h-full max-w-full object-contain" />
+                )}
               </div>
               
               {file && (

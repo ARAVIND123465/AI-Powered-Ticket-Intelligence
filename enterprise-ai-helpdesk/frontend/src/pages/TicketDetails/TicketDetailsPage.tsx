@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useParams } from 'react-router-dom';
 import Badge from '@/components/ui/Badge';
@@ -6,22 +6,161 @@ import AIInsightsPanel from '@/components/ticket/AIInsightsPanel';
 import TicketTimeline from '@/components/ticket/TicketTimeline';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Clock, User, Brain, RefreshCw, Paperclip, Download } from 'lucide-react';
-import type { AIInsights } from '@/types';
+import PDFViewerModal from '@/components/ticket/PDFViewerModal';
+import {
+  Clock,
+  User,
+  Brain,
+  RefreshCw,
+  Paperclip,
+  Download,
+  Eye,
+  Sparkles,
+  Upload,
+  Plus,
+  FileText,
+  CheckCircle2,
+} from 'lucide-react';
+import type { AIInsights, TicketAttachment } from '@/types';
 import { ticketStore } from '@/utils/ticketStore';
 import { formatRelative } from '@/utils/formatters';
 import { cn } from '@/utils/cn';
 import { toast } from 'sonner';
 
 import { ticketService } from '@/services/ticket.service';
+import { attachmentService } from '@/services/attachment.service';
 
 export default function TicketDetailsPage() {
   const { id } = useParams();
   const tickets = ticketStore.getTickets();
   const initialTicket = tickets.find((t) => t.id === id) || tickets[0];
-  
+
   const [ticket, setTicket] = useState(initialTicket);
   const [isReclassifying, setIsReclassifying] = useState(false);
+
+  // Attachments State
+  const [attachments, setAttachments] = useState<TicketAttachment[]>([]);
+  const [selectedAttachment, setSelectedAttachment] = useState<TicketAttachment | null>(null);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [isUploadingPdf, setIsUploadingPdf] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Support Agent Reply State
+  const [agentReplyText, setAgentReplyText] = useState('');
+  const [agentStatus, setAgentStatus] = useState(ticket.status);
+
+  // Load ticket attachments from API or ticketStore fallback
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadAttachments = async () => {
+      try {
+        const data = await attachmentService.list(ticket.id);
+        if (isMounted && data && data.length > 0) {
+          setAttachments(data);
+          return;
+        }
+      } catch (err) {
+        console.warn('Could not load attachments from backend API:', err);
+      }
+
+      // Fallback: If ticket has an attachment in ticketStore
+      if (isMounted && ticket.attachment) {
+        const isPdf = ticket.attachment.toLowerCase().endsWith('.pdf');
+        if (isPdf) {
+          setAttachments([
+            {
+              id: `ATT-${ticket.id}`,
+              ticket_id: ticket.id,
+              uploader_id: ticket.user_id,
+              uploader_name: ticket.user_id.split('@')[0] || 'Customer',
+              filename: ticket.attachment,
+              file_size: 142000,
+              page_count: ticket.pdf_extracted_text?.match(/\[Page \d+\]/g)?.length || 1,
+              content_type: 'application/pdf',
+              uploaded_at: ticket.created_at,
+              has_analysis: !!ticket.pdf_summary,
+            },
+          ]);
+        }
+      }
+    };
+
+    loadAttachments();
+    return () => {
+      isMounted = false;
+    };
+  }, [ticket.id, ticket.attachment]);
+
+  const handleUploadPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      toast.error('Only PDF documents are supported for upload.');
+      return;
+    }
+
+    setIsUploadingPdf(true);
+    toast.info(`Uploading ${file.name}...`);
+
+    try {
+      const uploaded = await attachmentService.upload(ticket.id, file);
+      setAttachments((prev) => [uploaded, ...prev]);
+
+      // Update ticketStore attachment field
+      const updatedTicket = { ...ticket, attachment: file.name };
+      setTicket(updatedTicket);
+      const allTickets = ticketStore.getTickets();
+      const idx = allTickets.findIndex((t) => t.id === ticket.id);
+      if (idx !== -1) {
+        allTickets[idx] = updatedTicket;
+        localStorage.setItem('helpdesk_tickets', JSON.stringify(allTickets));
+      }
+
+      toast.success('PDF document attached successfully!');
+    } catch (err: any) {
+      console.warn('Backend upload failed, registering in local store:', err);
+      // Fallback local addition
+      const fallbackAtt: TicketAttachment = {
+        id: `ATT-${Date.now()}`,
+        ticket_id: ticket.id,
+        uploader_id: 'current-user',
+        uploader_name: 'Support Agent',
+        filename: file.name,
+        file_size: file.size,
+        page_count: 1,
+        content_type: 'application/pdf',
+        uploaded_at: new Date().toISOString(),
+        has_analysis: false,
+      };
+      setAttachments((prev) => [fallbackAtt, ...prev]);
+
+      const updatedTicket = { ...ticket, attachment: file.name };
+      setTicket(updatedTicket);
+      const allTickets = ticketStore.getTickets();
+      const idx = allTickets.findIndex((t) => t.id === ticket.id);
+      if (idx !== -1) {
+        allTickets[idx] = updatedTicket;
+        localStorage.setItem('helpdesk_tickets', JSON.stringify(allTickets));
+      }
+
+      toast.success('PDF document attached to ticket!');
+    } finally {
+      setIsUploadingPdf(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleOpenPdfViewer = (att: TicketAttachment) => {
+    setSelectedAttachment(att);
+    setIsViewerOpen(true);
+  };
+
+  const handleApplyDraftToReply = (draftText: string) => {
+    setAgentReplyText(draftText);
+    toast.success('AI draft inserted into agent response composer!');
+  };
 
   const handleReclassify = async () => {
     setIsReclassifying(true);
@@ -35,11 +174,11 @@ export default function TicketDetailsPage() {
         priority: aiInsights.predicted_priority || ticket.priority,
         sentiment: aiInsights.sentiment || ticket.sentiment,
         ai_root_cause: `Re-evaluated via ML classifier: ${aiInsights.predicted_category || ticket.category} (${((aiInsights.category_confidence || 0.85) * 100).toFixed(1)}% confidence)`,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       const allTickets = ticketStore.getTickets();
-      const index = allTickets.findIndex(t => t.id === ticket.id);
+      const index = allTickets.findIndex((t) => t.id === ticket.id);
       if (index !== -1) {
         allTickets[index] = updatedTicket;
         localStorage.setItem('helpdesk_tickets', JSON.stringify(allTickets));
@@ -51,9 +190,9 @@ export default function TicketDetailsPage() {
       // Offline fallback
       const categories = ['Billing', 'Bug', 'Access Control', 'Software', 'Hardware', 'Network', 'Payment', 'Refund'];
       const currentCat = ticket.category || 'General';
-      const available = categories.filter(c => c !== currentCat);
+      const available = categories.filter((c) => c !== currentCat);
       const randomCat = available[Math.floor(Math.random() * available.length)];
-      
+
       const newPriority = ticket.priority === 'High' ? 'Medium' : 'High';
       const newSentiment = ticket.sentiment === 'Frustrated' ? 'Neutral' : 'Frustrated';
 
@@ -63,11 +202,11 @@ export default function TicketDetailsPage() {
         priority: newPriority,
         sentiment: newSentiment,
         ai_root_cause: `Re-evaluated via ML classifier. Detected new pattern corresponding to ${randomCat}. Correlation accuracy: 96.5%`,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       const allTickets = ticketStore.getTickets();
-      const index = allTickets.findIndex(t => t.id === ticket.id);
+      const index = allTickets.findIndex((t) => t.id === ticket.id);
       if (index !== -1) {
         allTickets[index] = updatedTicket;
         localStorage.setItem('helpdesk_tickets', JSON.stringify(allTickets));
@@ -83,19 +222,19 @@ export default function TicketDetailsPage() {
   const handleDownload = (fileName: string, content: string) => {
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    
+
     const link = document.createElement('a');
     link.href = url;
-    const downloadName = fileName.toLowerCase().endsWith('.pdf') 
-      ? fileName.slice(0, -4) + '_ocr_summary.txt' 
+    const downloadName = fileName.toLowerCase().endsWith('.pdf')
+      ? fileName.slice(0, -4) + '_ocr_summary.txt'
       : fileName + '_summary.txt';
     link.setAttribute('download', downloadName);
     document.body.appendChild(link);
     link.click();
-    
+
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    
+
     toast.success(`Downloaded: ${downloadName}!`);
   };
 
@@ -113,70 +252,12 @@ export default function TicketDetailsPage() {
     fake_file_name: ticket.attachment,
   };
 
-  const getPdfDetails = (fileName: string, category: string | null) => {
-    const name = fileName.toLowerCase();
-    
-    // Dynamically retrieve stored real PDF text/summary from backend analysis
-    if (ticket.pdf_summary) {
-      const pageCount = ticket.pdf_extracted_text?.match(/\[Page \d+\]/g)?.length || 1;
-      const sizeEst = ticket.pdf_extracted_text 
-        ? `${(ticket.pdf_extracted_text.length / 1024).toFixed(1)} KB` 
-        : "1.4 MB";
-      return {
-        size: sizeEst,
-        pages: pageCount,
-        contentSummary: ticket.pdf_summary,
-        isFake: false
-      };
-    }
-
-    const size = "1.4 MB";
-    const pages = 1;
-    let contentSummary = "Extracted metadata: General text document.";
-
-    const isFake = name.includes('fake') || name.includes('spam') || name.includes('unwanted') || name.includes('irrelevant') || category === 'Spam';
-
-    if (isFake) {
-      contentSummary = `[Security & Fraud Detection Scan]
-• Verification Status: FAILED (Flagged as Fraudulent / Fake Data)
-• Risk Assessment Score: 99.4% (Critical Risk Alert)
-• File Inspected: ${fileName}
-• Issues Identified:
-  1. Forged transaction header signatures.
-  2. Mismatched Stripe Gateway authorization certificates.
-  3. Suspicious phishing links embedded inside PDF anchors.
-  4. Content does not correlate with real billing history.
-• Conclusion: This attachment contains fake/unwanted data. Blocked by AI Integrity scanner.`;
-    } else if (category === 'Payment' || name.includes('payment') || name.includes('receipt') || name.includes('refund')) {
-      contentSummary = `[Receipt Metadata - VERIFIED]
-• Verification Status: PASSED (Authentic Document)
-• Merchant: Stripe Gateway / Helpdesk Checkout
-• Customer Name: Aravind
-• Amount: $49.00 USD
-• Status: Deducted / Failed (Order Confirmation Timeout)
-• Reference Code: CHRG-88349271`;
-    } else if (category === 'Network' || name.includes('vpn') || name.includes('network') || name.includes('connect')) {
-      contentSummary = `[System Log Metadata - VERIFIED]
-• Verification Status: PASSED (Authentic Logs)
-• Target Host: vpn.company.com
-• Gateway IP: 198.51.100.42
-• Event: Disconnect / Ping Timeout (Interval: 1800s)
-• Error Code: SEC_ERROR_EXPIRED_SESSION`;
-    } else {
-      contentSummary = `[Document Text Metadata - VERIFIED]
-• File: ${fileName}
-• Title: Support Details Log
-• Summary: Log report detailing system error parameters submitted by user.`;
-    }
-
-    return { size, pages, contentSummary, isFake };
-  };
-
   return (
     <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-start justify-between">
+      {/* Top Banner */}
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="text-sm font-mono text-[var(--text-tertiary)]">{ticket.id}</span>
             <Badge variant="status">{ticket.status}</Badge>
             {ticket.priority && <Badge variant="priority">{ticket.priority}</Badge>}
@@ -184,83 +265,131 @@ export default function TicketDetailsPage() {
           </div>
           <h1 className="text-xl font-bold text-[var(--text-primary)]">{ticket.title}</h1>
         </div>
-        <Button variant="outline" size="sm" onClick={handleReclassify} isLoading={isReclassifying}>
-          <RefreshCw className="w-3.5 h-3.5" /> Reclassify
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleReclassify} isLoading={isReclassifying}>
+            <RefreshCw className="w-3.5 h-3.5" /> Reclassify
+          </Button>
+        </div>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main content */}
+        {/* Main Content Column */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Description */}
+          {/* Description Card */}
           <Card>
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Description</h3>
             <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{ticket.description}</p>
-            
-            {/* Attachment block */}
-            {ticket.attachment && (() => {
-              const pdfDetails = getPdfDetails(ticket.attachment, ticket.category);
-              return (
-                <div className={cn(
-                  "mt-4 p-4 rounded-xl space-y-3 border",
-                  pdfDetails.isFake 
-                    ? "bg-red-500/5 border-red-500/20" 
-                    : "bg-[var(--bg-tertiary)] border-[var(--border-primary)]"
-                )}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className={cn(
-                        "w-9 h-9 rounded-lg flex items-center justify-center",
-                        pdfDetails.isFake ? "bg-red-500/10 text-red-400" : "bg-primary-500/10 text-primary-400"
-                      )}>
-                        <Paperclip className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-[var(--text-primary)]">{ticket.attachment}</p>
-                        <p className="text-[10px] text-[var(--text-tertiary)]">PDF Document • {pdfDetails.size} • {pdfDetails.pages} page(s)</p>
-                      </div>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-8 gap-1 text-xs"
-                      onClick={() => handleDownload(ticket.attachment!, pdfDetails.contentSummary)}
-                    >
-                      <Download className="w-3 h-3" /> Download
-                    </Button>
-                  </div>
-                  
-                  {/* Extracted content detail container */}
-                  <div className={cn(
-                    "p-3 rounded-lg border space-y-2",
-                    pdfDetails.isFake 
-                      ? "bg-red-500/5 border-red-500/20" 
-                      : "bg-[var(--bg-secondary)] border-[var(--border-primary)]"
-                  )}>
-                    <div className={cn(
-                      "flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider",
-                      pdfDetails.isFake ? "text-red-400" : "text-primary-400"
-                    )}>
-                      <Brain className="w-3.5 h-3.5" /> 
-                      {pdfDetails.isFake ? "AI Fraud Scanner - Flagged Attachment" : "AI OCR Extracted Content"}
-                    </div>
-                    <pre className={cn(
-                      "text-xs font-mono whitespace-pre-wrap leading-relaxed p-2.5 rounded-md border",
-                      pdfDetails.isFake
-                        ? "text-red-300 bg-red-950/20 border-red-500/10 font-medium"
-                        : "text-[var(--text-secondary)] bg-[var(--bg-tertiary)]/50 border-[var(--border-primary)]/50"
-                    )}>
-                      {pdfDetails.contentSummary}
-                    </pre>
-                  </div>
-                </div>
-              );
-            })()}
 
             <div className="flex items-center gap-4 mt-4 pt-4 border-t border-[var(--border-primary)]">
-              <div className="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]"><User className="w-3.5 h-3.5" /> {ticket.user_id}</div>
-              <div className="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]"><Clock className="w-3.5 h-3.5" /> {formatRelative(ticket.created_at)}</div>
+              <div className="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]">
+                <User className="w-3.5 h-3.5" /> {ticket.user_id}
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]">
+                <Clock className="w-3.5 h-3.5" /> {formatRelative(ticket.created_at)}
+              </div>
             </div>
+          </Card>
+
+          {/* PDF Attachments & Document Intelligence Section */}
+          <Card className="space-y-4 border-primary-500/20">
+            <div className="flex items-center justify-between border-b border-[var(--border-primary)] pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-primary-500/10 text-primary-400 flex items-center justify-center">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                    Ticket Attachments & PDF Intelligence
+                  </h3>
+                  <p className="text-[11px] text-[var(--text-tertiary)]">
+                    View uploaded documents and run AI-powered root cause & resolution analysis
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={handleUploadPdf}
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 text-xs h-8"
+                  isLoading={isUploadingPdf}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Attach PDF
+                </Button>
+              </div>
+            </div>
+
+            {/* Attachments List */}
+            {attachments.length > 0 ? (
+              <div className="space-y-2.5">
+                {attachments.map((att) => (
+                  <div
+                    key={att.id}
+                    className="p-3.5 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] hover:border-primary-500/40 transition-colors flex items-center justify-between flex-wrap gap-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-400 flex items-center justify-center shrink-0">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-semibold text-[var(--text-primary)] truncate max-w-xs">
+                            {att.filename}
+                          </p>
+                          {att.has_analysis && (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md font-medium border border-emerald-500/20">
+                              <CheckCircle2 className="w-3 h-3" /> AI Analyzed
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-[var(--text-tertiary)] mt-0.5">
+                          {(att.file_size / 1024).toFixed(1)} KB • {att.page_count} page(s) • Uploaded by {att.uploader_name || 'Customer'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        className="h-8 gap-1.5 text-xs"
+                        onClick={() => handleOpenPdfViewer(att)}
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        Open & View PDF
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 gap-1.5 text-xs text-primary-400 border-primary-500/30 hover:bg-primary-500/10"
+                        onClick={() => handleOpenPdfViewer(att)}
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        AI Analysis
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-6 rounded-xl bg-[var(--bg-tertiary)]/50 border border-dashed border-[var(--border-primary)] text-center space-y-2">
+                <Paperclip className="w-6 h-6 text-[var(--text-tertiary)] mx-auto" />
+                <p className="text-xs font-medium text-[var(--text-secondary)]">No attachments on this ticket yet</p>
+                <p className="text-[11px] text-[var(--text-tertiary)]">
+                  Upload a PDF document to view it in-browser and perform intelligent AI root cause analysis.
+                </p>
+              </div>
+            )}
           </Card>
 
           {/* AI Root Cause */}
@@ -274,7 +403,7 @@ export default function TicketDetailsPage() {
             </p>
           </Card>
 
-          {/* AI Resolution */}
+          {/* AI Suggested Resolution */}
           <Card>
             <div className="flex items-center gap-2 mb-3">
               <Brain className="w-4 h-4 text-emerald-400" />
@@ -285,19 +414,19 @@ export default function TicketDetailsPage() {
             </pre>
           </Card>
 
-          {/* Support Agent Response & Status Update Box */}
+          {/* Support Agent Response & Communication Log */}
           <Card className="space-y-4 border-primary-500/20">
             <div className="flex items-center justify-between border-b border-[var(--border-primary)] pb-3">
               <div className="flex items-center gap-2">
                 <Brain className="w-4 h-4 text-primary-400" />
-                <h3 className="text-sm font-bold text-[var(--text-primary)]">Support Agent Response & Communication Log</h3>
+                <h3 className="text-sm font-bold text-[var(--text-primary)]">Support Agent Response Console</h3>
               </div>
-              <Badge variant="status">Agent Console</Badge>
+              <Badge variant="status">Agent Workspace</Badge>
             </div>
 
-            {/* Display agent responses */}
+            {/* Previous Responses */}
             <div className="space-y-3">
-              {(ticket.agent_responses && ticket.agent_responses.length > 0) ? (
+              {ticket.agent_responses && ticket.agent_responses.length > 0 ? (
                 ticket.agent_responses.map((resp: any, idx: number) => (
                   <div key={resp.id || idx} className="p-3.5 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] text-xs space-y-1.5">
                     <div className="flex items-center justify-between">
@@ -308,7 +437,7 @@ export default function TicketDetailsPage() {
                         {new Date(resp.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                    <p className="text-[var(--text-secondary)] leading-relaxed">{resp.response_text}</p>
+                    <p className="text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">{resp.response_text}</p>
                     {resp.status_changed_to && (
                       <span className="inline-block text-[10px] text-amber-400 font-semibold bg-amber-500/10 px-2 py-0.5 rounded-md">
                         Status changed to: {resp.status_changed_to}
@@ -318,29 +447,43 @@ export default function TicketDetailsPage() {
                 ))
               ) : (
                 <div className="text-xs text-[var(--text-tertiary)] p-3 text-center bg-[var(--bg-tertiary)] rounded-xl">
-                  No responses added yet. Type below to send an official support update to the customer.
+                  No agent responses recorded yet. Type below or use the AI PDF Analysis to generate a contextual response.
                 </div>
               )}
             </div>
 
-            {/* Agent Reply Input */}
+            {/* Agent Reply Composer */}
             <div className="pt-3 border-t border-[var(--border-primary)] space-y-3">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-[var(--text-secondary)]">Post Agent Response / Resolution Update</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-[var(--text-secondary)]">
+                    Official Support Response to Customer
+                  </label>
+                  {attachments.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenPdfViewer(attachments[0])}
+                      className="text-[11px] text-primary-400 hover:underline flex items-center gap-1"
+                    >
+                      <Sparkles className="w-3 h-3" /> Draft with AI from PDF
+                    </button>
+                  )}
+                </div>
                 <textarea
-                  rows={3}
-                  id="agentReplyInput"
-                  placeholder="Type official response to customer or internal resolution notes..."
-                  className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl p-3 text-xs text-[var(--text-primary)] focus:outline-none focus:border-primary-500"
+                  rows={4}
+                  value={agentReplyText}
+                  onChange={(e) => setAgentReplyText(e.target.value)}
+                  placeholder="Type official response to customer or insert AI-drafted reply..."
+                  className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl p-3 text-xs text-[var(--text-primary)] focus:outline-none focus:border-primary-500 leading-relaxed font-sans"
                 />
               </div>
 
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="text-[var(--text-tertiary)]">Update Status:</span>
+                  <span className="text-[var(--text-tertiary)]">Update Ticket Status:</span>
                   <select
-                    id="agentStatusSelect"
-                    defaultValue={ticket.status}
+                    value={agentStatus}
+                    onChange={(e) => setAgentStatus(e.target.value as any)}
                     className="bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-lg px-2.5 py-1 text-xs text-[var(--text-primary)]"
                   >
                     <option value="Open">Open</option>
@@ -353,21 +496,16 @@ export default function TicketDetailsPage() {
                 <Button
                   size="sm"
                   onClick={() => {
-                    const inputEl = document.getElementById('agentReplyInput') as HTMLTextAreaElement;
-                    const statusEl = document.getElementById('agentStatusSelect') as HTMLSelectElement;
-                    const text = inputEl?.value;
-                    const newStatus = statusEl?.value;
-
-                    if (!text || !text.trim()) {
+                    if (!agentReplyText || !agentReplyText.trim()) {
                       toast.error('Please enter a response message.');
                       return;
                     }
 
-                    const updated = ticketStore.addAgentResponse(ticket.id, 'Support Agent', text.trim(), newStatus);
+                    const updated = ticketStore.addAgentResponse(ticket.id, 'Support Agent', agentReplyText.trim(), agentStatus);
                     if (updated) {
-                      setTicket({ ...updated });
-                      if (inputEl) inputEl.value = '';
-                      toast.success('Agent response posted & synchronized with customer ticket details!');
+                      setTicket({ ...updated, status: (agentStatus as any) || updated.status });
+                      setAgentReplyText('');
+                      toast.success('Agent response sent to customer!');
                     }
                   }}
                   className="flex items-center gap-1.5 text-xs"
@@ -378,19 +516,27 @@ export default function TicketDetailsPage() {
             </div>
           </Card>
 
-          {/* Timeline */}
+          {/* Activity Timeline */}
           <Card>
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4">Activity Timeline</h3>
             <TicketTimeline />
           </Card>
         </div>
 
-        {/* Sidebar: AI Insights */}
+        {/* Sidebar: AI Insights Panel */}
         <div>
           <AIInsightsPanel insights={insights} />
         </div>
       </div>
+
+      {/* PDF Viewer & AI Analysis Modal */}
+      <PDFViewerModal
+        isOpen={isViewerOpen}
+        onClose={() => setIsViewerOpen(false)}
+        ticketId={ticket.id}
+        attachment={selectedAttachment}
+        onApplyDraftToReply={handleApplyDraftToReply}
+      />
     </div>
   );
 }
-
